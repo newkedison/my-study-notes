@@ -1,0 +1,159 @@
+nmap命令的使用及相关端口信息
+
+--------------Shell-----------------
+------------------------------------
+今天主要是想解决根据IP如何找到对应的主机名，试了几个命令未果，然后找到了nmap命令，发现这个命令可以满足要求，而且同时还具有了很多我用不到的强大功能，可以说是一个万能的扫描软件，只要自己组合合适的命令，可以作为任何网络攻击的前期准备。
+
+由于nmap参数太多，man太长，我又没有攻击别人的需要，所以这里只是记录一下我了解到的功能，弱水三千，我取这一瓢即可
+
+一开始试了命令
+$ nmap -A 192.168.1.88
+等了大半天，终于出来结果(手工局部加码)：
+--------------Shell-----------------
+Starting Nmap 5.21 ( http://nmap.org ) at 2011-12-03 14:49 CST
+Nmap scan report for 192.168.1.88
+Host is up (0.019s latency).
+Not shown: 991 closed ports
+PORT     STATE SERVICE       VERSION
+80/tcp   open  http          Microsoft IIS webserver 5.1
+|_html-title: 
+135/tcp  open  msrpc         Microsoft Windows RPC
+139/tcp  open  netbios-ssn
+443/tcp  open  https?
+445/tcp  open  microsoft-ds  Microsoft Windows XP microsoft-ds
+873/tcp  open  rsync?
+1025/tcp open  msrpc         Microsoft Windows RPC
+2869/tcp open  http          Microsoft HTTPAPI httpd 1.0 (SSDP/UPnP)
+|_html-title: Site doesn't have a title (text/html).
+3389/tcp open  microsoft-rdp Microsoft Terminal Service
+Service Info: OS: Windows
+
+Host script results:
+|_nbstat: NetBIOS name: L, NetBIOS user: <unknown>, NetBIOS MAC: **:**:**:**:**:**
+|_smbv2-enabled: Server doesn't support SMBv2 protocol
+| smb-os-discovery:  
+|   OS: Windows XP (Windows 2000 LAN Manager)
+|   Name: USER\L
+|_  System time: 2011-12-03 14:54:05 UTC+8
+
+Service detection performed. Please report any incorrect results at http://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 133.46 seconds
+------------------------------------
+可以看到，前面列出了这台电脑的可用端口，后面有一行
+--------------Shell-----------------
+|_nbstat: NetBIOS name: L, NetBIOS user: <unknown>, NetBIOS MAC: **:**:**:**:**:**
+------------------------------------
+NetBIOS name: L说明这台电脑的主机名是L，我的要求实现了，但是存在一个缺点，速度太慢，可以看到，时间花了133秒才扫描出来，找一个主机名根本不需要这么久，大部分的时间都浪费在前面扫描端口上了
+
+为了提高速度，我开始RTFM，发现man实在太长，没心情看完，又开始Google，找到了不少资料，我觉得有用的有：
+http://www.91ri.org/891.html
+http://nmap.org/man/zh/index.html#man-description (这篇是man的中文翻译)
+
+看了这些资料，我对nmap的功能倒是了解的不少，但是可惜的是，我需要的功能（解析IP对应的主机）还是找不到答案，还是只有-A参数能满足要求。
+
+回头看看前面的提示，我注意到了这么一段
+--------------Shell-----------------
+Host script results:
+|_nbstat: NetBIOS name: L, NetBIOS user: <unknown>, NetBIOS MAC: **:**:**:**:**:**
+|_smbv2-enabled: Server doesn't support SMBv2 protocol
+| smb-os-discovery:  
+|   OS: Windows XP (Windows 2000 LAN Manager)
+|   Name: USER\L
+|_  System time: 2011-12-03 14:54:05 UTC+8
+------------------------------------
+第一句：Host script results，这说明了下面的内容，不是nmap本身输出的，而是一个script输出的，所以理所当然的，nmap肯定没有对应的参数
+但是，nmap有一个--script的参数，可以指定执行某个script，这下看到了曙光，执行：
+$ nmap --script nbstat 192.168.1.88
+结果如下(手工局部加码)：
+--------------Shell-----------------
+Starting Nmap 5.21 ( http://nmap.org ) at 2011-12-03 15:08 CST
+NSE: Script Scanning completed.
+Nmap scan report for 192.168.1.88
+Host is up (0.0074s latency).
+Not shown: 991 closed ports
+PORT     STATE SERVICE
+80/tcp   open  http
+135/tcp  open  msrpc
+139/tcp  open  netbios-ssn
+443/tcp  open  https
+445/tcp  open  microsoft-ds
+873/tcp  open  rsync
+1025/tcp open  NFS-or-IIS
+2869/tcp open  unknown
+3389/tcp open  ms-term-serv
+
+Host script results:
+| nbstat:  
+|   NetBIOS name: L, NetBIOS user: <unknown>, NetBIOS MAC: **:**:**:**:**:**
+|   Names
+|     L<00>                Flags: <unique><active>
+|     USER<00>             Flags: <group><active>
+|     L<20>                Flags: <unique><active>
+|     USER<1e>             Flags: <group><active>
+|     USER<1d>             Flags: <unique><active>
+|_    \x01\x02__MSBROWSE__\x02<01>  Flags: <group><active>
+
+Nmap done: 1 IP address (1 host up) scanned in 2.63 seconds
+------------------------------------
+看时间，2.63秒，这速度很可以了，一般都可以接受，但是，前面在测试nmap命令的时候，已经发现了几个可以提高速度的办法，于是再试(为了节省篇幅，突出重点，下面只列出执行的命令，是否满足要求已经执行时间)：
+--------------Shell-----------------
+(这个命令指定扫描80端口，是可以扫，但是无法列出主机名，失败)
+$ nmap -p80 --script nbstat 192.168.1.88
+80/tcp open  http
+Nmap done: 1 IP address (1 host up) scanned in 1.17 seconds
+
+(然后注意到了上面139端口的服务是netbios-ssn，所以扫一下139端口试试，这下可以满足要求了，时间也非常快)
+$ nmap -p139 --script nbstat 192.168.1.88
+139/tcp open  netbios-ssn
+|   NetBIOS name: L, NetBIOS user: <unknown>, NetBIOS MAC: **:**:**:**:**:**
+Nmap done: 1 IP address (1 host up) scanned in 0.11 seconds
+
+（又试扫了一下135，也同样成功）
+$ nmap -p135 --script nbstat 192.168.1.88
+135/tcp open  msrpc
+|   NetBIOS name: L, NetBIOS user: <unknown>, NetBIOS MAC: **:**:**:**:**:**
+Nmap done: 1 IP address (1 host up) scanned in 0.16 seconds
+
+（netBIOS也支持UDP的，所以使用-sU参数进行UDP扫描，同样可以扫到，但是因为没有指定端口，所以耗时较长，另外，-sU参数需要root权限才能执行，可以注意到，137端口的服务是netbios-ns，那么下面就只扫137）
+$ sudo nmap -sU --script nbstat 192.168.1.88
+137/udp  open          netbios-ns
+|   NetBIOS name: L, NetBIOS user: <unknown>, NetBIOS MAC: **:**:**:**:**:**
+Nmap done: 1 IP address (1 host up) scanned in 4.07 seconds
+
+（只扫137的UDP，同样可以，速度也快）
+$ sudo nmap -sU -p137 --script nbstat 192.168.1.88
+137/udp open  netbios-ns
+|   NetBIOS name: L, NetBIOS user: <unknown>, NetBIOS MAC: **:**:**:**:**:**
+Nmap done: 1 IP address (1 host up) scanned in 0.32 seconds
+
+（比较下来，还是用TCP扫139合适，速度快，还不需要root，现在再加上其他参数提速，-P0使得nmap不测试指定IP是否存在，直接开始扫，-sT指定只用TCP协议，从结果来看，反而比刚才慢，但是实际上是不慢的，因为不连续执行，差个几十毫秒也是正常，而且nmap可能有一定的缓存时间，第一次用nmap确认一个ip存在后，一段时间内不会再去确认，就和加上-P0参数的效果是一样的，这里手动加上-P0，可以确保在任何时候都一样快）
+$ nmap -P0 -sT -p139 --script nbstat 192.168.1.88
+139/tcp open  netbios-ssn
+|   NetBIOS name: L, NetBIOS user: <unknown>, NetBIOS MAC: **:**:**:**:**:**
+Nmap done: 1 IP address (1 host up) scanned in 0.13 seconds
+
+（再加一个参数-T4，我也没太搞明白这个参数是干嘛用的，但是在所有nmap命令上加上这个参数后，速度都有一定的提高，所以就加上吧）
+$ nmap -P0 -sT -p139 -T4 --script nbstat 192.168.1.88
+139/tcp open  netbios-ssn
+|   NetBIOS name: L, NetBIOS user: <unknown>, NetBIOS MAC: **:**:**:**:**:**
+Nmap done: 1 IP address (1 host up) scanned in 0.09 seconds
+------------------------------------
+好了，到目前为止，已经完全满足要求了，下面再补充一些在解决问题的过程中，学习到的知识
+
+139，135端口
+这两个端口都是netbios协议占用的，只要windows主机，安装了NetBIOS协议，或者说只要可以访问共享文件，那这两个端口一般是打开的，
+139是TCP，135的UDP，具体的作用我懒的去复制，反正就是和共享文件有关，通过这两个端口，可以查询共享文件，登录用户名，操作系统等信息，
+网上也有好多貌似专业的135，139漏洞攻击方法，实际上大部分都是在危言耸听，这两个端口如果设置的不好，确实会有安全漏洞，但是，XP的默认配置应该安全性还是可以的，不可能说只要开放这个端口，计算机就有危险，
+那些所谓教程，都是需要很高的权限才能实现，但是如果有这么高的权限，那随便怎么弄，都是可以轻松入侵的。就跟你把家里的钥匙贴在大门上（还贴个字条说这是我的钥匙），然后忘记关窗户一样，正常的小偷肯定是开门进来而不会去翻窗户的
+
+nmap的其他参数
+-sS 使用半开TCP进行测试，关于半开连接，可以参考有关资料（我大概了解，但是写起来太浪费时间），半开连接的好处是可以避免大部分系统把这个连接记录到系统日至，这对入侵者当然很重要了，总不能去别人家里偷东西，还留个手机号码吧。如果使用这个参数，需要root权限，我估计应该是用raw socket实现的，所以需要root权限
+-v 这个参数可以出现多次，表示需要nmap现实更详细的报告，还是更更详细的报告，还是更更更详细的报告
+另外，IP的表示方法有很多种，比如
+192.168.1.88这种是单个IP，
+192.168.1,2.88表示192.168.1.88和192.168.2.88
+192.168.1-254.88表示254个IP
+192.168.1-2,4-100.2,3,12-15表示很多个IP（-.-!)
+192.168.1.0/24是另一种表示方法，和192.168.1.0-255等效，后面的24表示这个IP的前24bit保持不变，后面的8bit遍历所有可能
+192.168.1.0/0 这个将扫描整个网络，相信没谁有时间等到扫描完
+
