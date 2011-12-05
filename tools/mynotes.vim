@@ -1,4 +1,4 @@
-" Last Change: 2011-12-05 20:48:47
+" Last Change: 2011-12-05 21:04:10
 " Vim syntax file
 " FileType: my notes
 " Maintainer:	newkedison
@@ -14,8 +14,8 @@ syn match nIndex      display "^\(\s\s\)*\zs\d\+\ze[\.。、,，: ：]"
 syn match nIndex      display "^\(\s\s\)*\zs\d\+\ .*$"
 syn match nChapter    display "^\s*\zs\[.\+\]\ze\s*$"
 syn match nQuote      display "[\"“”].\{-}[\"”“]"
-syn match nShellCmd   display "\$\ \zs.\+"
-syn match nVimCmd     display ":\zs.\+"
+syn match nShellCmd   display "^\$\ \zs.\+"
+syn match nVimCmd     display "^:\zs.\+"
 syn match nReference  display "\(参考\|来源\)[：:].\+$"
 
 syn region nBlock     start=/[-=]\{10,}[^-=]\+[-=]\{10,}/ end=/[-=]\{20,}/ contains=nShellCmd
