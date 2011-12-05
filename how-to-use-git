@@ -1,4 +1,4 @@
-Git常用命令及使用心得
+=Git常用命令及使用心得=
 
 Git陡峭的学习曲线，使得我实在无法光靠脑子记住那么多的命令，未免同样的问题一遍又一遍的Google，还是记录下来比较好
 
@@ -42,4 +42,4 @@ $ git checkout <文件名>
 $ export EDITOR=vim
 另外还可以修改.git/config文件，在core段，加入editor=vim这一句（我还没测试过，不过应该好使）
 
-
+vim: ft=mynotes
