@@ -34,6 +34,9 @@ $ git reset HEAD <文件名>
 另外，如果文件已修改，但是还没add，状态是unstaged的时候，想放弃修改，恢复原来的版本，也就是实现revert的功能，则用
 $ git checkout <文件名>
 
+暂时发现暂存区的一个作用
+在提交之前，可能我们修改了多个文件，这些修改可能不是针对同一个问题的修改，我们不希望这些文件被一次性commit，那么可以先将部分文件加入暂存区，先commit，然后再把剩下的全部或者部分文件加入暂存区，继续commit。
+
 [使用vim编写提交说明]
 默认的编写提交说明的工具，是古董级的nano，相当不好用，所以有必要换成vim
 参考：http://imtx.me/archives/1201.html
@@ -41,5 +44,25 @@ $ git checkout <文件名>
 我用的是
 $ export EDITOR=vim
 另外还可以修改.git/config文件，在core段，加入editor=vim这一句（我还没测试过，不过应该好使）
+
+[让Git记住Google Code的用户名和密码]
+在git-push的时候，需要输入用户名和密码，每次输入相当的麻烦，这时候可以借助~/.netrc文件，让git记住我们在Google Code上的密码
+其实Google Code的Source的CheckOut页面，上面已经写了方法，不过我一开始没有完全按照上面的步骤操作，导致总是没测试成功
+首先要在~/.netrc文件添加以下内容（局部手工打码）
+-------------------文件~/.netrc-------------------
+machine code.google.com
+login **********@gmail.com 
+password *****************
+--------------------------------------------------
+login后面是邮箱名，password后面是密码，这个密码可以是邮箱密码，也可以是另外一个Googe生成的，专用于Google Code的密码
+因为这个文件是明文，Google为了保护我们的邮箱密码，专门为Google Code自动生成一个随机密码，
+只要登陆着，然后访问https://code.google.com/hosting/settings,就可以看到这个随机密码，我们访问Google Code的时候，这个密码的作用和邮箱密码一样
+如果这个随机密码泄露，也没必要担心，只要点击“Regenerate”按钮，即可重新生成一个，前面的那个自动作废
+
+我一开始这么设置了之后，发现每次push的时候，还是要密码，后来检查".git/config"文件，里面有这么一行(局部手工打码)
+	url = https://**********@code.google.com/p/my-study-notes/
+里面已经写了我的邮箱名，这样本来是可以省去填写用户名，但是带来的副作用就是密码就不会自动读取~/.netrc的设置了，所以，把这行改为
+	url = https://code.google.com/p/my-study-notes/
+这样用户名就没有了，git会自动先去~/.netrc中寻找
 
 vim: ft=mynotes
