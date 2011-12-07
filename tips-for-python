@@ -1,0 +1,35 @@
+=Python小知识=
+
+abstract:学习Python过程中,一些小知识点的记录
+tag:Python tips
+
+1. type(10) == types.IntType 与 type(10) is types.IntType
+这两句的结果是一致的,但是思路不同
+首先要明确,type的返回值是一个"类型"(也可以说是"类",因为从Python2.2开始,这两者已经统一了),types.IntType也是一个"类型"
+其次,两个类型在比较,如果用==,那么比较的是类型的值,如果用is,比较的是是否指向同一个对象.可以这么理解,如果用==,是对整个类进行比较,如果用is,是比较地址是否相等.显而易见,比较地址的效率肯定是高的(另: X is Y等价于id(X)==id(Y))
+再次,因为type的返回值都是类型(类型的__name__就叫type),这种类型总共就那么几个值,这些值都是types这个模块里面.用一个小实验(id(type(10)==id(types.IntType)的结果为True),就可以看出,实际上type返回值,就是types模块中几个类型的引用.
+那么,就可以用is直接判断type的返回值,这样的效率比==要高一些
+
+2. enumerate()这个函数在for循环中很好用
+a=(1, 22, 333, 444)
+for i, value in enumerate(a)
+    print '(%d)%d' % i % value
+这样在循环中,可以同时取出数值和序号,不用自己定义一个变量,用来算序号
+
+3. 调试wxPython程序时,由于错误信息已经给重定向了,导致代码有错误时,会一闪而过,解决的方法,就是在定义App实例时,设置参数redirect=True,这样就能看到错误提示了.注意,如果继承了wx.App,那么是在调用父类的__init__中设置这个参数.
+另外,在Windows中,redirect的默认值是True,而在Linux/Unit中,默认值是False,所以最好手动赋值一下,以免换平台时出错
+
+4. 继承一个类之后,如果不重定义__init__函数,那么父类的__init__会被自动调用,如果重定义了__init__,那么一定要记得在这个函数里面调用父类的__init__,因为Python不像C++,他不会再自动调用父类的__init__.
+
+5. 判断一个变量是否已经定义，有三种方法
+第一种方法：
+'var' in locals().keys()
+第二种方法：
+try: 
+  print var
+except NameError: 
+  print 'var not defined'
+第三种方法：
+'var' in dir()
+
+vim: ft=mynotes
