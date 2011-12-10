@@ -21,7 +21,7 @@ for i, value in enumerate(a)
 
 4. 继承一个类之后,如果不重定义__init__函数,那么父类的__init__会被自动调用,如果重定义了__init__,那么一定要记得在这个函数里面调用父类的__init__,因为Python不像C++,他不会再自动调用父类的__init__.
 
-5. 判断一个变量是否已经定义，有三种方法
+5 判断一个变量是否已经定义，有三种方法
 第一种方法：
 'var' in locals().keys()
 第二种方法：
@@ -31,5 +31,12 @@ except NameError:
   print 'var not defined'
 第三种方法：
 'var' in dir()
+
+7 关于PEP8
+PEP8是有关Python编程风格的一个推荐标准，详细的内容在网上很容易找到，官方还提供了测试工具，通过以下命令安装
+$ sudo easy_install pep8
+安装完成后，要测试一个文件是否符合PEP8，可以用以下命令
+$ pep8 --show-source --show-pep8 --statistics --count --benchmark filename.py
+看pep8 -h的介绍，可以很容易清楚上面那些参数是什么意思，另外还有一个--ignore的参数，可以指定忽略哪些错误，比如我一般加上--ignore=E111，忽略要求缩进4个空格，因为我习惯于缩进2个空格
 
 vim: ft=mynotes
