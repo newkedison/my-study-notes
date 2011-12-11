@@ -1,0 +1,176 @@
+=安装VIM=
+
+abstract: 编译安装vim7.3的心得记录
+tags: vim make Makefile install
+
+[前言]
+这次应该是第三次编译安装VIM了，以前第一次编译的时候写了一篇文章，这次也写一下吧
+重新编译的动机，是因为
+$ vim --version | grep python
+看到居然python特性没有编译进来，这当然不行，
+另外，考虑到上一次安装的时候，把vim安装到了~/share的各种不方便，决定再次编译安装
+由于最近在研究版本管理系统，因此相当有自信可以获取到最新的源码，所以决定获取最新的原来进行编译
+
+[获取源码]
+vim的源码托管在了Google Code，用的是Hg，在官网上，也明明白白，清清楚楚的写了如何clone源码，只要按照上面的操作，就可以轻松下载到最新的源码，命令如下：
+$ hg clone https://vim.googlecode.com/hg/ vim
+耐心的等待一段时间，版本库clone完成，然后可以cd到vim目录，用”hg log | head”看一下最近一次提交的信息
+我看到最新版本是V7.3.372，3天前提交的
+
+[备份原有插件]
+实际上，即使不备份，也不会有问题，但是毕竟是第一次操作（以前两次都是全新的安装），而且以前的文件放的位置不太合适，
+以前我把自己下载的工具，放在了和vim73同级的vimfiles里面，这其实是windows下的做法，在Linux下，用户脚本一般是放在$(HOME)/.vim里面的
+所以，我把以前vimfiles文件夹里面的内容，复制一份放在~/.vim里面了
+另外还要注意.vimrc文件，这个以前就放在~/.vimrc，这就是常用的位置，不需要移动了
+这里必须要赞一下vim这种文件组织方式，把升级版本的成本降到极低，风险降到0
+无论是安装到/usr/share还是~/share，都有一个顶级目录vim，如果是Windows，里面就是一个vimXX（后面两位数字表示版本号），以及一个vimfiles文件夹，安装或者卸载的时候，vimXX文件夹会被改变，但是vimfiles文件夹永远不会被安装程序改变。在Linux，默认是使用~/.vim文件夹来代替vimfiles文件夹，但是如果觉得有必要的话（比如为所有用户统一安装一些插件），可以自己手动建立这个目录。
+这样的文件结构，使得用户只要保证把自己的插件，放在这个文件夹里面，那么每次重新安装vim的时候，根本无需担心自己的插件会丢失。另外，如果希望同时存在多个不同的vim版本，也没关系，这些不同的版本，都可以共用这些用户插件。
+vim还有一个巧妙的地方，可以打开vim，然后用
+:set runtimepath
+可以看到好几个目录，vim在查找脚本的时候，会依次在这些文件夹里面查找，而且排在后面的脚本将可以覆盖前面的内容，可以看到，第一个目录是~/.vim，最后一个目录，是~/.vim/after，这样做的目的是，使得用户可以在自己的配置文件中，控制所有的定义，排除其他目录中配置的干扰。
+
+[卸载以前安装的vim]
+这个没什么好说的，找到以前的Makefile，然后
+$ make uninstall
+即可
+之所以要找以前的Makefile，是因为我改了安装的路径到~/share，如果没改过，那么只要用对应vim版本的Makefile就可以了
+
+[配置选项]
+配置选项是一个很开心，也很纠结的事情，开始是因为可以自己完全定制这个软件的功能，哪些功能要，哪些功能不要，我说了算，这有一种掌控感
+纠结在于总归要经过多次摸索，才能弄出一个满足我要求的配置
+其实配置很简单，因为文件中已经写的非常详细了，只要打开那些需要的特性就行
+找到刚才下载的源码，进入src目录，编辑Makefile文件，我修改的内容如下
+---------------------diff-------------------
+379c379
+< CONF_OPT_LUA = --enable-luainterp
+---
+> #CONF_OPT_LUA = --enable-luainterp
+403c403
+< CONF_OPT_PERL = --enable-perlinterp
+---
+> #CONF_OPT_PERL = --enable-perlinterp
+417c417
+< CONF_OPT_PYTHON = --enable-pythoninterp
+---
+> #CONF_OPT_PYTHON = --enable-pythoninterp
+437c437
+< CONF_OPT_CSCOPE = --enable-cscope
+---
+> #CONF_OPT_CSCOPE = --enable-cscope
+455c455
+< CONF_OPT_MULTIBYTE = --enable-multibyte
+---
+> #CONF_OPT_MULTIBYTE = --enable-multibyte
+496c496
+< CONF_OPT_FEAT = --with-features=huge
+---
+> #CONF_OPT_FEAT = --with-features=huge
+499c499
+< CONF_OPT_COMPBY = "--with-compiledby=newkedison"
+---
+> #CONF_OPT_COMPBY = "--with-compiledby=John Doe <JohnDoe@yahoo.com>"
+------------------------------
+主要是打开perl，lua，python，cscope支持，编译模式为huge，最后死皮赖脸的署上我的名字
+但是，如果这样编译的话（具体编译步骤见后文），有可能lua还是安装不了
+后来查看了configure的输出，原来是找不到lua.h这个文件，然后我就
+$ sudo apt-get install liblua5.1*
+把整个lua的开发库还有一些杂七杂八的东西都安装了，再编译，就可以加上lua的接口了
+同理，如果经过上面的配置，python和perl的接口还是没有，那么要先装上他们的开发包
+
+[编译安装]
+在顶层目录（或者src目录里面也一样），运行
+$ make
+然后等啊等，毫无意外的编译完成，真是谢天谢地，记得前两次，在编译的时候，会出现各种问题，可能是因为需要解决的问题，前面一次编译已经都解决了，所以这次的编译非常顺利
+然后接着
+$ sudo make install
+一小会儿，安装完成，无论是vim还是gvim，都可以正常打开，用
+$ vim --version | grep python
+$ vim --version | grep lua
+$ vim --version | grep perl
+看到现在这三种接口都已经支持了
+大功告成
+
+[拾遗]
+在实际使用中，还经常使用到了以下命令
+$ make clean
+这个是删除编译出来的.o文件，但是要注意，不会重新执行./configure
+
+$ make reconfig
+这个命令涵盖了上面的clean，另外还会重新执行./configure，以更新配置，然后还会自动执行make
+所以，每次修改了Makefile后，就只要执行一次这个命令，然后再执行uninstall和install就可以了
+
+安装完成后，运行时候，发现打开一个新的buffer的时候，会提示一个ActivateBuffer函数里面有错误，经过Google，这个函数是BufferExplorer.vim插件里面的，检查这个插件，的确有这个函数，但是我尝试了一下，无法修正这个问题，然后跑到vim.org下载了这个插件的最新版本，覆盖后，问题解决
+由此事，我想到应该有必要装一个插件管理的工具，搜索了一下，目标锁定了vim-addon-manager这个插件，在多种同类工具中，大部分人都推荐这个。
+不过暂时没时间，等以后再折腾。
+
+
+***********************************************************
+下面这篇是以前写的，转录于此
+
+=第一次编译安装VIM=
+摘要:为了使用vimgdb,于是开始尝试编译VIM7.2的源码,碰到了不少问题,也都一一解决,记录下来,以备后用
+
+1. 解压并打完补丁后,执行make,跑了一会儿后,提示
+checking for tgetent in -lcurses... no
+no terminal library found
+checking for tgetent()... configure: error: NOT FOUND!
+      You need to install a terminal library; for example ncurses.
+      Or specify the name of the library with --with-tlib.
+make[1]: *** [auto/config.mk] 错误 1
+make[1]:正在离开目录 `/home/newk/install/vim72/src'
+make: *** [first] 错误 2
+
+经过网上搜索,碰到的似乎不多,后来找到一个网页:http://linux.chinaunix.net/bbs/archiver/?tid-1009812.html
+里面有人提到了,要安装apt-get install libncurses5-dev,于是打开新立得,找libncurses5,把dev和dbg全装上了,检查通过
+
+2. 然后就是make和make install,大概几分钟,安装完成
+运行gvim,说找不到命令,运行vim,先是出来一大堆错误,然后显示一下界面,然后自动结束,回到shell.
+回到一开始,找出错语句,写的是"*** buffer overflow detected ***: gvim terminated",
+于是Google到了:http://forum.ubuntu.com.cn/viewtopic.php?f=122&t=240806&start=0,里面提到了这是gcc新版本的一个BUG,可以这么解决,在make的时候,后面加一个参数,也就是make CFLAGS="-O2 -D_FORTIFY_SOURCE=1"
+我就测试了一下,的确可以解决这个问题.后来我想把vim72/src/Makefile里面的CFLAGS的赋值直接改成那个参数,结果在检查的时候就报错,原因未知,因为关系不大,也就没去研究了
+
+3. 安装完后,vim可以运行,但是gvim还是不行,于是开始改源码包中的vim72/src/Makefile,按照网上说的,再加上我自己的想法,总共去掉了下面几条的注释符号(也就是启用这些功能)
+CONF_OPT_CSCOPE = --enable-cscope
+CONF_OPT_GDB = --enable-gdb
+CONF_OPT_MULTIBYTE = --enable-multibyte
+CONF_OPT_INPUT = --enable-xim
+CONF_OPT_FEAT = --with-features=huge
+CONF_OPT_COMPBY = "--with-compiledby=newk"(这个是在输入:version后可以看到是谁编译的)
+有一个选项是CONF_OPT_OUTPUT = --enable-fontset,网上有人说是要打开,不过我没打开,也没啥问题
+还有一个选项是选择用哪个图形库,我没选,文件的注释里面说了,如果不选,那么会用第一个找到的图形库,我反正不知道那个好,于是让他自己选好了
+安装路径没改,就放在/usr/local里面
+保存后再次安装(先make uninstall,再重复解压,打补丁,make,make install的过程),结果还是没有gvim
+又是去google,找到了http://easwy.com/blog/archives/advanced-vim-skills-solve-compile-problem/,去打开源码中的vim72/src/auto/config.log,里面一大堆东西,也有提到缺少一些头文件的,我也去搜索了一下,找了两三个库装了.后来又在文件里面搜索error,找到了一句是说gtk的版本太老,所以找不到可以用的图形库,于是不安装gvim.但是我用的是gnome,理论上来说,gtk不可能是太老的版本,后来又找了一些资料,然后发现gtk2.0没装,又跑去新立得装了libgtk2.0-dev
+现在配置里面又加了一句
+CONF_OPT_GUI = --enable-gui=gtk2
+也就是指定用gtk2,我想估计用
+#CONF_OPT_GUI = --enable-gui=gtk --disable-gtktest
+应该也可以,就是不检查gtk版本,直接用.反正gtk2能用,我也就不去测试了
+
+4. 现在gvim也能运行了,不过运行前会出现几个错误,都是
+** (gvim:14356): CRITICAL **: gtk_form_set_static_gravity: assertion `static_gravity_supported' failed
+继续google,说这个是gtk库的一个BUG,不影响使用,并且有人提供了屏蔽的方法,我没用人家说的方法,而是在~/.bashrc里面,把gvim给alias了一下,将错误重定向到~/.xesssion-errors里面,现在gvim不报错了,当然这只是掩盖了问题,并没有解决.我又继续搜索彻底解决的办法,也有人说了,要更新源,但是我照做了,也没有把错误解决掉,还是只能用屏蔽的办法.
+
+5. 鉴于前面多次重复劳动,进行安装,而且还经常忘记加上make后面的参数.,于是写了一个install.sh文件,和两个压缩包放在一起,直接运行就可以完成安装,一开始的内容是这样的
+-----------------install.sh-------------------
+rm -R vim72
+rm -R vimgdb
+tar xjf vim-7.2.tar.bz2
+tar xzf vimgdb72-1.14.tar.gz
+patch -d vim72 --backup -p0 < vimgdb/vim72.diff
+cp Makefile vim72/src
+cd vim72/src
+make CFLAGS="-O2 -D_FORTIFY_SOURCE=1"
+make install
+----------------------------------------------
+
+6. 目前vim和gvim都可以正常使用了,又发现一个问题,标题和提示语句全部都是英文,一旦出现中文,那就是乱码,而菜单始终是英文.
+又是一顿google,找到:http://blog.csdn.net/Purking/archive/2010/05/30/5635064.aspx,也按照里面说的改了,但是问题依旧.
+又去:h langmenu,原来这里设置的值,要在$VIMRUNTIME/lang里面找到对应的文件,才能进行转换,而在/usr/local/share/vim72/lang里面的中文文件名叫menu_zh_cn.utf-8.vim,但是我原来设置的是langmenu=zh-cn.utf8,所以找不到,只要改成zh_cn.utf-8就行了.现在菜单已经是中文了
+
+7. 标题和提示语句汉化的问题,又让我头疼了,无论怎么改选项,都没用,按说应该设置一句language messages=zh_cn.utf-8就OK了,可是设置已经起作用了,但是没有效果,这回google了半天,也没人说这个问题,在lang文件夹中,有一个README.txt,里面有提到如果要改变提示的语言,要找src/po里面,make一下就行,可是我无论去哪里,都找不到po这个文件夹.后来想想,似乎在下载VIM源码的时候,里面是有提到和lang有关的内容,赶快上去看,原来真的还有一个语言包,于是又下载了那个语言包,和前面下载的两个压缩包放在一起,在install.sh里面加了一句
+tar xzf vim-7.2-lang.tar.gz
+然后重新开始一次新的安装,等了几分钟,安装完成.
+这回打开gvim,全中文的啦.
+
+vim: ft=mynotes
