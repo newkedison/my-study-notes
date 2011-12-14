@@ -65,4 +65,45 @@ login后面是邮箱名，password后面是密码，这个密码可以是邮箱�
 	url = https://code.google.com/p/my-study-notes/
 这样用户名就没有了，git会自动先去~/.netrc中寻找
 
+[git-diff]
+git-diff用于比较当前的文件有哪些改变，通过不同的参数，可以比较不同的内容：
+$ git diff [filename]
+比较暂存区中的内容和暂时没有放到暂存区的内容的区别，也就是从上一次git-add过后被修改过的内容
+$ git diff --cached [filename]
+比较暂存区中和上一次commit的内容，也就是执行$git commit时会提交的内容
+$ git diff HEAD [filename]
+比较当前文件和上一次commit的内容，也就是执行$git commit -a时会提交的内容
+$ git diff test
+不是和当前分支比较，而是和test分支比较
+$ git diff HEAD^ HEAD
+比较当前分支前面两次commit之间改变了什么，也就是上一次commit修改了什么
+
+另外，还有一些参数，可以配合上面的命令
+--diff-filter=[(A|C|D|M|R|T|U|X|B)]
+仅列出（增加|复制|删除|修改|重命名|类型变化（比如文件变成文件夹）|未合并（Unmerge）|未知（Unknown）|损坏（Broken））的变化，这些字母可以任意多少个以任意顺序组合
+
+--name-status
+仅用一个字母表示每个文件的状态，不列出具体修改，字母的意思和上面的一样
+
+--ignore-space-at-eol
+忽略行尾的空格
+
+-b, --ignore-space-change
+忽略行为空格，连续多个空格均认为是一个空格
+
+-w, --ignore-all-space
+忽略所有空格
+
+--exit-code
+设定git-diff的返回值与diff命令一致，1表示有区别，0表示没有区别
+
+--quiet
+不产生任何输出，同时自动定义--exit-code
+
+PS：
+1. 有时候为了避免歧义，区分是分支名字还是文件名，在文件名前面加上" -- "，注意和文件名之间要有空格
+2. 可以比较任意两个历史commit之间的区别，先要用git-log看这两个commit的hash值，然后用
+$ git diff 0123456 abcdef0
+
+
 vim: ft=mynotes

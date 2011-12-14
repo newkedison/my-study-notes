@@ -39,4 +39,27 @@ $ sudo easy_install pep8
 $ pep8 --show-source --show-pep8 --statistics --count --benchmark filename.py
 看pep8 -h的介绍，可以很容易清楚上面那些参数是什么意思，另外还有一个--ignore的参数，可以指定忽略哪些错误，比如我一般加上--ignore=E111，忽略要求缩进4个空格，因为我习惯于缩进2个空格
 
+8 super()的用法
+super函数是用来让子类调用父类的同名方法的，在V2.2版本以前，要调用父类的方法，必须要写父类的类名，比如
+----------------Python---------------------
+class A:
+  def aaa(self):
+    pass
+class B(A):
+  def aaa(self):
+    A.aaa(self)
+-------------------------------------------
+这样有个缺点，万一基类要改名字的话，子类的代码也需要修改，如果有很多个子类，这将是一个麻烦且容易出错的事情，于是，在V2.2版本，增加了super函数，现在可以这么写
+----------------Python---------------------
+class A(object):
+  def aaa(self):
+    pass
+class B(A):
+  def aaa(self):
+    super(B, self).aaa()
+-------------------------------------------
+注意到，A的定义有一点不同，A要继承自object才行，如果不这样继承，运行到super这里会报错。这是因为，还是在以前，python的类经过一次升级，如果没有继承自object，认为是old-style，而继承的是new-style，只有new-style才支持这种super的用法。
+另外，在单继承的时候，上面两种方法都可以正常使用，但是在多继承的时候，一般要用super。当然，最好的选择是不使用多继承
+
+
 vim: ft=mynotes
