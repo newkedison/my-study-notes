@@ -1,0 +1,111 @@
+#!/usr/bin/env python
+#vim ft=python
+#abstract: 演示Python中正则表达式的基本用法
+#tag:Python RegExp example
+
+
+import re
+
+def print_match(s, m):
+  if m:
+    print s, '\tmatchobject:', m.group()
+  else:
+    print s, '\tnot match'
+
+def test1():
+  s = 'hello world'
+  r1 = 'h.*l'
+  r2 = '.*l'
+  print_match('re.match', re.match(r1, s))
+  print_match('re.search', re.search(r2, s))
+
+def test2():
+  s = 'abbabbabbabba'
+  print_match('greed\t', re.search('a(.*)a', s))
+  print_match('non-greed', re.search('a(.*?)a', s))
+
+def test3():
+  s = 'abbabbabbabba'
+  print_match('count\t', re.search('a(bba){1,2}', s))
+  print_match('non-greed', re.search('a(bba){1,2}?', s))
+
+def test4():
+  s = 'abbabbabbabba'
+  print_match('[]\t', re.search('a[ab]*', s))
+  print_match('|\t', re.search('(a|b)*', s))
+
+def test5():
+  s = 'abbabbabbabba'
+  m = re.search('a(b)(b.b)(.*)ab', s)
+  print_match('()\t', m)
+  print '\tm.group(1):', m.group(1)
+  print '\tm.groups:', m.groups()
+
+  s = 'abcdremove_meefg'
+  m = re.search('remove_me', s)
+  s = s[:m.start()] + s[m.end():]
+  print 'start()/end()\t', s
+
+  s = 'abcdremove_meefg'
+  m = re.search('d(remove_me)e', s)
+  s = s[:m.start(1)] + s[m.end(1):]
+  print 'start(1)/end(1)\t', s
+
+
+def test6():
+  s = 'aA'
+  print_match('(?i)\t', re.search('(?i)aa', s))
+  s = 'a\nAa'
+  print_match('(?mi)\t', re.search('(?mi)aa', s))
+  print_match('(?mis)\t', re.search('(?mis)....', s))
+
+  s = 'abcdef'
+  m = re.search('(?:a)(..)', s)
+  print_match('(?:)\t', m)
+  print '\tgroups:', m.groups()
+  print '\tgroupdict:', m.groupdict()
+
+  m = re.search('(?P<test>a)(?P<test2>..)', s)
+  print_match('(?P)\t', m)
+  print '\tgroups:', m.groups()
+  print '\tgroupdict:', m.groupdict()
+  print '\tgroup(test):', m.group('test')
+  print '\tgroup(test2):', m.group('test2')
+
+  s = 'abcdefabcdef'
+  m = re.search('(?#commnt)(?P<a>...).*(?P=a)', s)
+  print_match('(?P=name)', m)
+  print '\tgroups:', m.groups()
+  print '\tgroupdict:', m.groupdict()
+
+  s = 'abcdeabbbb'
+  print_match('(?=)\t', re.search('ab(?=cde)...', s))
+  print_match('(?!)\t', re.search('ab(?!cde)...', s))
+  print_match('(?<=)\t', re.search('.(?<=a)b', s))
+  print_match('(?<!)\t', re.search('.(?<!a)b', s))
+
+  s = 'abc'
+  print_match('(?(id)y|n)', re.search('(\[)?abc(?(1)\])', s))
+  s = '[abc]'
+  print_match('(?(id)y|n)', re.search('(\[)?abc(?(1)\])', s))
+
+def test7():
+  s = 'abcdef'
+  e = re.compile('abcde')
+  print_match('re.compile', e.search(s))
+
+def test8():
+  s = 'abcde'
+  e = re.compile('(ab)c(de)')
+  print 'sub()\t\t', e.sub(r'\2 \1', s)
+  print 're.sub()\t', re.sub('(a)bcd(e)', r'\2 \1', s)
+
+if __name__ == '__main__':
+  test1()
+  test2()
+  test3()
+  test4()
+  test5()
+  test6()
+  test7()
+  test8()
