@@ -6,6 +6,7 @@
 
 import re
 
+#辅助函数，打印一个matchobject的信息
 def print_match(s, m):
   if m:
     print s, '\tmatchobject:', m.group()
@@ -16,55 +17,76 @@ def test1():
   s = 'hello world'
   r1 = 'h.*l'
   r2 = '.*l'
+  #re.match和re.search的区别
+  #re.match必须从字符串第一个字符开始匹配，re.search可以从中间任意字符开始
   print_match('re.match', re.match(r1, s))
   print_match('re.search', re.search(r2, s))
 
 def test2():
   s = 'abbabbabbabba'
+  #默认是贪婪匹配，在*，?，{}后面加上一个问号，变成非贪婪匹配
   print_match('greed\t', re.search('a(.*)a', s))
   print_match('non-greed', re.search('a(.*?)a', s))
 
 def test3():
   s = 'abbabbabbabba'
+  #{a,b}最少匹配a次，最多匹配b次，默认贪婪，加上问号则变成非贪婪匹配
   print_match('count\t', re.search('a(bba){1,2}', s))
   print_match('non-greed', re.search('a(bba){1,2}?', s))
 
 def test4():
   s = 'abbabbabbabba'
+  #中括号表示可以使用其中的任意一个字符
   print_match('[]\t', re.search('a[ab]*', s))
+  #单竖线表示两边的都可以匹配，两边可以不只是一个字节
   print_match('|\t', re.search('(a|b)*', s))
 
 def test5():
   s = 'abbabbabbabba'
+  #圆括号表示提取这段内容作为一个小组，以后可以用\1, \2等来引用
   m = re.search('a(b)(b.b)(.*)ab', s)
   print_match('()\t', m)
+  #group(n)是第n个圆括号中的内容，groups()列出所有小组
   print '\tm.group(1):', m.group(1)
   print '\tm.groups:', m.groups()
 
   s = 'abcdremove_meefg'
   m = re.search('remove_me', s)
+  #matchobject类有start和end两个方法，可以返回某个组的起始位置和结束位置
+  #这里演示的是靠这两个位置和切片函数，实现删除字符串的部分内容
   s = s[:m.start()] + s[m.end():]
   print 'start()/end()\t', s
 
   s = 'abcdremove_meefg'
+  #start和end后面可以加上参数，用于指定某个小组
+  #默认不写的话就是0，表示整个匹配
   m = re.search('d(remove_me)e', s)
   s = s[:m.start(1)] + s[m.end(1):]
   print 'start(1)/end(1)\t', s
 
 
 def test6():
+  #(?)是一组特殊的用法，分别举例如下
   s = 'aA'
+  #问号后面加上几个特殊的字母，可以对整个匹配进行一些设置
+  #在这里设置的优点是，只要告诉别人这个pattern，就知道设置了
+  #后面可以跟的字符有‘iLmsux’，可以任意组合，注意大小写，常用的几个介绍如下
+  #i，忽略大小写
+  #m，^可以在多行文本中匹配每行开头，默认情况下只能匹配字符串开头，同理，$可以匹配每行末尾
+  #s，'.'可以匹配换行符，默认是只能匹配除了换行符以外的任意字符
   print_match('(?i)\t', re.search('(?i)aa', s))
   s = 'a\nAa'
   print_match('(?mi)\t', re.search('(?mi)aa', s))
   print_match('(?mis)\t', re.search('(?mis)....', s))
 
+  #(?:)和一对圆括号差不多，唯一不同是里面的内容不会记录到group里面
   s = 'abcdef'
   m = re.search('(?:a)(..)', s)
   print_match('(?:)\t', m)
   print '\tgroups:', m.groups()
   print '\tgroupdict:', m.groupdict()
 
+  #(?P<id>)可以给一个group起名字，后面可以用名字引用这个group，增加可读性
   m = re.search('(?P<test>a)(?P<test2>..)', s)
   print_match('(?P)\t', m)
   print '\tgroups:', m.groups()
@@ -72,18 +94,27 @@ def test6():
   print '\tgroup(test):', m.group('test')
   print '\tgroup(test2):', m.group('test2')
 
+  #(?#)就是注释，会被忽略
+  #(?P=id)可以引用前面定义好的组名
   s = 'abcdefabcdef'
   m = re.search('(?#commnt)(?P<a>...).*(?P=a)', s)
   print_match('(?P=name)', m)
   print '\tgroups:', m.groups()
   print '\tgroupdict:', m.groupdict()
 
+  #下面四个都是零长度匹配，前两个是前向匹配，后两个是后向匹配
+  #(?=)要求后面必须要有指定的内容，前面的内容才有效
+  #(?!)要求后面必须没有指定的内容，前面的内容才有效
+  #(?<=)要求前面必须是指定内容，后面的内容才有效
+  #(?<!)要求前面必须不是指定内容，后面的内容才有效
+  #反正比较难以用语言解释，看看下面四个语句运行的结果，应该能帮助理解
   s = 'abcdeabbbb'
   print_match('(?=)\t', re.search('ab(?=cde)...', s))
   print_match('(?!)\t', re.search('ab(?!cde)...', s))
   print_match('(?<=)\t', re.search('.(?<=a)b', s))
   print_match('(?<!)\t', re.search('.(?<!a)b', s))
 
+  #这是一个很特别的语法，和C的?:差不多，判断前面一个组是否匹配上了，如果匹配上，那么这段内容等效于y，否则等效于n（y和n可以是任意pattern），一般用法就是用来匹配括号，比如下面的语句，同样的语句，可以匹配'abc'或'[abc]'，但是不能匹配'[abc'
   s = 'abc'
   print_match('(?(id)y|n)', re.search('(\[)?abc(?(1)\])', s))
   s = '[abc]'
@@ -91,12 +122,16 @@ def test6():
 
 def test7():
   s = 'abcdef'
+  #re.compile返回一个RegexObject，如果某个pattern要经常使用，这么弄可以提高效率，但是如果只是少量的使用，不会有明显区别
   e = re.compile('abcde')
   print_match('re.compile', e.search(s))
 
 def test8():
   s = 'abcde'
+  #这里是sub函数的用法，用不用RegexObject都可以
   e = re.compile('(ab)c(de)')
+  #re.sub()的第二个参数（RegexObject.sub()的第一个参数）可以是普通字符串，也可以是一个函数名，如果是普通字符串，前面要加一个字符‘r’来表示
+  #sub的作用是在最后一个参数应用pattern，然后给倒数第二个参数使用，具体有什么用，暂时还不甚理解
   print 'sub()\t\t', e.sub(r'\2 \1', s)
   print 're.sub()\t', re.sub('(a)bcd(e)', r'\2 \1', s)
 
