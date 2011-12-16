@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+#encoding=utf-8
 #vim ft=python
 #abstract: 演示Python中正则表达式的基本用法
 #tag:Python RegExp example
@@ -9,6 +10,7 @@ import re
 #辅助函数，打印一个matchobject的信息
 def print_match(s, m):
   if m:
+    #group()函数返回指定group的内容，默认参数0返回整个匹配，非0的参数表示子匹配
     print s, '\tmatchobject:', m.group()
   else:
     print s, '\tnot match'
@@ -46,7 +48,7 @@ def test5():
   #圆括号表示提取这段内容作为一个小组，以后可以用\1, \2等来引用
   m = re.search('a(b)(b.b)(.*)ab', s)
   print_match('()\t', m)
-  #group(n)是第n个圆括号中的内容，groups()列出所有小组
+  #group(n)是第n个圆括号中的内容，groups()列出所有小组，但是不包括group(0)
   print '\tm.group(1):', m.group(1)
   print '\tm.groups:', m.groups()
 
@@ -111,6 +113,7 @@ def test6():
   s = 'abcdeabbbb'
   print_match('(?=)\t', re.search('ab(?=cde)...', s))
   print_match('(?!)\t', re.search('ab(?!cde)...', s))
+  #注意，下面两个要求括号中的匹配长度是固定的，比如不能有*或{2, 3}这种匹配不定长的语法
   print_match('(?<=)\t', re.search('.(?<=a)b', s))
   print_match('(?<!)\t', re.search('.(?<!a)b', s))
 
@@ -127,13 +130,39 @@ def test7():
   print_match('re.compile', e.search(s))
 
 def test8():
-  s = 'abcde'
-  #这里是sub函数的用法，用不用RegexObject都可以
-  e = re.compile('(ab)c(de)')
-  #re.sub()的第二个参数（RegexObject.sub()的第一个参数）可以是普通字符串，也可以是一个函数名，如果是普通字符串，前面要加一个字符‘r’来表示
-  #sub的作用是在最后一个参数应用pattern，然后给倒数第二个参数使用，具体有什么用，暂时还不甚理解
-  print 'sub()\t\t', e.sub(r'\2 \1', s)
-  print 're.sub()\t', re.sub('(a)bcd(e)', r'\2 \1', s)
+  #下面是re.sub()函数的用法，这个函数用于实现替换，还有一个subn，功能和sub一样，但是返回值是一个tuple，多了一个返回值，表示总共替换了几次
+  #如果要实现把a换成b，如下
+  print 're.sub()', re.sub('a', 'b', 'ababa')
+  #可以限制只替换n次
+  print 're.sub()', re.sub('a', 'b', 'aaaaa', 3)
+  #第二个参数可以很丰富多彩，即可以是一个字符串，也可以是一个函数名，也可以是一个lamda表达式
+  #另外，还可以通过\1来引用第一个子匹配，\g<id>引用(?P<id>)定义的子匹配，\g<1>和\1等效，但是\g<2>0可以表示第二个子匹配后面加上0，这个用\20就无法表示了
+  print 're.sub()', re.sub('(?P<aaa>a)bcd(e)', r'\2\g<aaa>\1', 'abcde')
+  #如果第二个参数是函数名或者lamda表达式，表示用这个函数的返回值，来替换匹配的内容
+  print 're.sub()', re.sub('a', lambda m: 'b', 'abababa')
+  #要注意的就是，这个函数是有一个参数的，类型是matchobject，就是整个匹配的信息
+  print 're.sub()', re.sub('a', lambda m: '(' + str(m.start()) + ',' + str(m.end()) + ')', 'babbbbab')
+  
+
+def test9():
+  s = 'abcdefgabcdefgabcdefg'
+  #re.findall用于查找所有的匹配（re.search只匹配一次，后面的就忽略了）
+  #返回值是一个list，元素可能是字符串，也可能是tuple，取决于有多少个子匹配
+  #如果没有子匹配，list中是每次匹配的整个内容
+  print 're.findall', re.findall('abc', s)
+  #如果有一个子匹配，list中是这个子匹配的内容
+  #如果有多个子匹配，list中是这些子匹配构成的tuple
+  print 're.findall', re.findall('(a)b(c)', s)
+  #如果需要得到多次匹配的MatchObject，则需要用re.finditer，他的返回值就是MatchObject的List
+  for m in re.finditer('abc', s):
+    print_match('re.finditer()', m)
+
+
+#另外还有一些常用的，比如
+#\A 匹配字符串开头 \Z匹配字符串结尾
+#\d 匹配数字 \D 匹配所有非数字字符
+#\s 匹配空白字符 \S 匹配非空白字符
+#\w 匹配数字字母下划线 \W 反之
 
 if __name__ == '__main__':
   test1()
@@ -144,3 +173,4 @@ if __name__ == '__main__':
   test6()
   test7()
   test8()
+  test9()
