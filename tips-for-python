@@ -81,5 +81,47 @@ class B(A):
 #!/usr/bin/env python
 还有另外一种方法，使用subshell的方法，也可以自动去PATH里面搜索python的位置，但是subshell比较浪费资源，不到万不得已，还是少用为好。
 
+11 删除和重新加载指定模块
+验证模块是否已加载
+import sys
+if 'sys' in sys.modules:
+  print 'sys in modules'
+if 'foo' in sys.modules:
+  print 'foo in modules'
+删除模块(经测试,这里可以删除sys.modules里面的信息，但是模块还是没有被删除)
+import sys
+if 'ModuleName' in sys.modules:
+  del(sys.modules['ModuleName'])
+重新加载模块(可实现守护程序在某个模块更新后，自动加载这个模块)
+import foo
+foo = reload(foo)
+
+12 函数参数的传递
+最一般的做法，调用是必须给足3个参数，而且顺序不能修改
+def foo(a, b, c)
+
+可以提供默认值，这时就可以用foo(b=1, c=2, a='a')来调用了
+def foo(a, b, c=1)
+
+如果参数个数不定，可以在参数前面加个*，则后面所有的参数，作为一个tuple传入
+def foo(a, *b)
+比如上面的函数，如果用
+foo(1, 2) 则a=1, b=(2,)
+foo(1) 则 a=1, b=()
+foo(1, 2, 3, 4) 则 a=1, b=(2, 3, 4)
+
+还有一种加两个*的，表示可以接受一个字典，比如
+def foo(**a)
+则可以这么调用
+foo(a=1, b=3, c=5), 则a的值为{a:1, b:3, c:5}
+注意这里虽然调用的时候，出现给a的赋值，和形参的名字一样，但这只会作为字典的一个元素而已
+
+结合以上几种方法，定义
+foo(a, b=2, *c, **d),则下面的调用所传递的参数如后面所示
+foo(1)                        a=1, b=2, c=(), d={}
+foo(1, 3)                     a=1, b=3, c=(), d={}
+foo(1, 2, 3)                  a=1, b=2, c=(3,) d={}
+foo(x=2, b='0', d='', a=-1)   a=-1, b='0', c=(), d={'x':2, 'd': ''}
+foo(1, 2, d=None, 5) 错误，有等号的参数后面不能再有没有等号的参数
 
 vim: ft=mynotes
