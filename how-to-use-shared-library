@@ -1,0 +1,110 @@
+=共享库的生成与使用=
+
+abstract:总结共享库的使用方法
+tag:SharedLibrary so SharedObject soname readelf ldd
+
+[参考资料]
+英文版：http://tldp.org/HOWTO/Program-Library-HOWTO/shared-libraries.html
+不太完整的翻译：http://blog.csdn.net/benben85/article/details/4161130
+
+[简介]
+共享库（Shared Library）是Linux下的通用函数库，与Windows的dll非常类似
+但是通过良好的机制，尽量避免了dll的版本升级问题（dll hell）
+一般在Linux下，共享库使用so（Shared Object）作为扩展名，后面还会跟上版本号
+
+[共享库的三个名字]
+Linux为了解决版本问题，使用了一种特殊的机制，要理解这个机制，首先要了解共享库的三个名字
+“real name”：实际的文件名，这是实际生成的库文件，一般命名为libXXX.so.X.Y.Z
+其中XXX是自定义的名字，后面的X，Y，Z是用数字表示的版本号
+X是主版本号，一般在库的接口发生改变，无法兼容的时候，更新这个数字
+Y是次版本号，如果接口没有改变，只是升级算法，或者增加新接口，更新这个数字
+Z是build版本号，一般每升级一次加1，也可以省略
+“soname”：共享库的一个特殊的名字，在每个共享库生成的时候，一般会指定这个名字
+一般命名为libXXX.so.X，其实就是上面的real name去掉最后两个版本号
+每一个程序，在编译的时候，会指定一个他需要的共享库的soname，程序在启动的时候，由系统自动找到一个合适的共享库来使用
+从前面可以看出，X是主版本号，一般接口有改变，无法保持兼容，才会更改这个数字，所以，soname就要指定这个数字，避免由于接口改变导致运行错误
+一个程序需要那些共享库，每个共享库的soname，以及运行这个程序时，实际使用的库名字，可以使用ldd命令查看，比如
+-------------------Shell-------------------
+$ ldd /bin/ls
+linux-gate.so.1 =>  (0x0091c000)
+libselinux.so.1 => /lib/i386-linux-gnu/libselinux.so.1 (0x0077b000)
+librt.so.1 => /lib/i386-linux-gnu/librt.so.1 (0x00424000)
+libacl.so.1 => /lib/i386-linux-gnu/libacl.so.1 (0x00944000)
+libc.so.6 => /lib/i386-linux-gnu/libc.so.6 (0x00110000)
+libdl.so.2 => /lib/i386-linux-gnu/libdl.so.2 (0x00867000)
+/lib/ld-linux.so.2 (0x00e32000)
+libpthread.so.0 => /lib/i386-linux-gnu/libpthread.so.0 (0x00730000)
+libattr.so.1 => /lib/i386-linux-gnu/libattr.so.1 (0x009fc000)
+-------------------------------------------
+看libc.so.6一行，这是c的共享库，目前主版本是6，ls命令在执行的时候，需要这个文件
+-------------------Shell-------------------
+$ ll /lib/i386-linux-gnu/libc.so.6
+lrwxrwxrwx 1 root root 12 2011-10-23 09:04 /lib/i386-linux-gnu/libc.so.6 -> libc-2.13.so*
+-------------------------------------------
+从上面可以看出，这个文件其实就是一个符号链接，实际的文件其实是/lib/i386-linux-gnu/libc-2.13.so
+这个libc-2.13.so就是real name，而libc.so.6是soname，虽然这里的real name没有按照上面的规则，不过也是一样的意思，可能是Ubuntu的开发者喜欢这么起名字吧。
+“link name”：这个是在编译可执行程序的时候，使用的名字，如果要自己编译程序，就需要关心这个名字
+比如我们在编译需要用到数学库的程序时，需要加上-lm参数，这个参数的意义就是，编译器会去寻找libm.so这个共享库（或者libm.a这个静态库，这个不是本文重点），这里的libm.so就是link name，命名的规则很明显，就是把soname后面的版本也去掉，只保留libXXX.so
+
+从上面可以看出，与其说一个共享库有三个名字，不如说有3个文件，只不过其中real name一般是实际编译生成的文件名，而soname是一个到real name的符号链接，然后link name是一个到soname的符号链接（只有在需要编译程序的时候，才需要link name，如果仅需要运行程序，只要有soname就行）
+一般来说，我们自己写一个共享库，用real name，然后自己用ln -s，再生成两个符号链接，就完成了一个共享库的安装，当然，实际使用的时候，还牵涉到一个共享库搜索路径的问题
+
+[共享库的搜索路径]
+这里要分两种情况：
+1 编译程序时的搜索路径
+gcc默认的共享库搜索路径是/lib和/usr/lib，如果自己写的共享库，要么放在这两个文件夹里面，要么需要用-L参数指定搜索路径
+2 执行程序时的搜索路径
+前面用ldd命令，箭头后面的内容就是实际上搜索到的文件，Linux在执行程序的时候，会通过ld.so在一些路径中查找需要的共享库
+搜索的依据是/etc/ld.so.cache文件，这个文件不是我们写的，而是用ldconfig命令生成的，实际上决定搜索路径的是/etc/ld.so.conf文件，ldconfig就是读取这个文件，然后生成/etc/ld.so.cache，以提高搜索共享库的速度
+我们自己写的库，可以放在/lib或者/usr/lib，也可以在/etc/ld.so.conf中添加一行搜索路径
+在Ubuntu里面，/etc/ld.so.conf里面只有一句话，就是加载/etc/ld.so.conf.d文件夹中的所有文件，这招在Ubuntu里面随处可见。
+所以，我觉得比较好的方法，是在/etc/ld.so.conf.d文件中新建一个符号链接，链接到用户目录中的一个配置文件（比如$(HOME)/userlib.conf），这样我们就可以根据需要添加自己的搜索目录，而不需要root权限了。
+这些写在配置文件中的搜索路径，都是全局有效的，另外，还有一个环境变量LD_LIBRARY_PATH可以增加搜索路径，比如
+$ LD_LIBRARY_PATH=$(pwd) ./a.out
+这样可以把当前目录加入搜索路径，LD_LIBRARY_PATH可以写多个路径，用冒号分隔，可以在.bashrc中用export定义
+
+这里，还要引入另一个环境变量LD_PRELOAD，这个变量可以指定优先加载一些共享库，优先使用这些库里面的函数，比如我们自己写了一个libm.so.6，那么可以
+$ LD_PRELOAD=/path/to/libm.so.6 some-command
+这样程序会优先使用我们自己写的共享库。
+当然，我们不可能改写整个libm.so.6，但是假设我们写了一个更好的sqrt函数，只要生成libm.so.6，然后用上面的命令，那么这个程序用到sqrt函数的地方，就会调用我们写的sqrt函数，而不是linux提供的那个。也就是说，LD_PRELOAD这个环境变量，可用来替换指定共享库或共享库里面的函数。
+使用的时候，要注意LD_PRELOAD后面必须是so文件的完整路径，如果多个so文件，用冒号隔开
+实现同样的功能，还可以使用/etc/ld.so.preload文件，和前面的/etc/ld.so.conf文件一样的用法，在Ubuntu下，/etc/ld.so.preload可能会不存在，自己手动建立就好。
+另外要注意，/etc/ld.so.preload里面的设置是全局的，所以一般还是不要用的好
+
+[共享库的建议位置]
+根据GNU建议，还有一个文件系统标准的建议，一般如果是开发中的程序（不稳定版），共享库一般放在/usr/local/lib，
+稳定版的发布程序，一般把共享库放在/usr/lib，如果是系统启动需要的库，放在/lib，然后一些插件一类的库，放在/usr/local/lib
+
+[共享库的生成和使用]
+假设有test.h test.cpp用于生成一个共享库，还有一个main.cpp来使用这个库
+----------------------Shell------------------------
+$ g++ -c test.cpp -o test.o
+$ g++ -shared -fPIC -Wl,-soname,libtest.so.1 -o libtest.so.1.0 test.o
+$ ln -s libtest.so.1.0 libtest.so.1
+$ ln -s libtest.so.1 libtest.so
+$ g++ main.cpp -L. -ltest -o test
+$ LD_LIBRARY_PATH=$(pwd) ./test
+----------------------------------------------------
+上面就是从生成共享库到链接程序，到使用程序的过程，主要看其中的一些参数
+-shared 表示生成共享库，必须加这个参数
+-fPIC 表示生成的共享库，使用独立地址，具体意义我也没去深究，反正也是必须的
+-Wl,-soname,libtest.so.1 -Wl是把逗号后面的内容，作为链接器（ld）的参数，用逗号代替必要的空格
+    -soname libtest.so.1 这个参数给ld的话，是指定生成的so文件的soname，这个soname可以用readelf命令看到
+-L. 把当前目录加入链接时搜索共享库的路径
+-ltest 生成程序时，搜索libtest.so或者libtest.a，链接为可执行程序
+LD_LIBRARY_PATH=$(pwd) 执行后面的命令时，临时改变LD_LIBRARY_PATH为当前路径
+
+[共享库的动态加载]
+前面的用法是在链接的时候，已经指定好了要加载哪些共享库，加载的动作是系统做的，这可以称之为静态加载
+在程序中，也可以通过dlopen等一系列的函数，动态的加载指定的共享库，这样可以实现自动加载插件的功能
+因为暂时还用不到，具体用法以后再研究
+
+[拾遗]
+1. /usr/local/lib在Ubuntu里面，默认不在共享库的搜索路径，如果需要，要自己修改/etc/ld.so.conf文件
+2. LD_DEBUG这个环境变量，用于辅助调试，可以要求在使用共享库的时候，显示出来很多的信息，一般除非真的需要调试，否则还是留空，具体参数有很多，需要时再Google
+3. -fPIC还有小写格式-fpic，功能基本一样，就是-fPIC生成的库比较大，比较通用，-fpic生成的可能受平台限制较大
+4. ldconfig这个命令需要root权限，因为要修改/etc/ld.so.cache文件，一般在把共享库放在任一搜索路径下面之后，或者改变过搜索路径只有，都要执行一次，否则程序还是会找不到共享库的，所以，如果没有root权限，唯一的办法就是修改LD_LIBRARY_PATH
+5. 一般用readelf -d libXXX.so.X.Y.Z来查看一个共享库文件的soname，其实real name和soname真正的对应关系是用这个命令来看的
+6. 如果一个libXXX.so.X.Y.Z里面可以看到soname，那么执行ldconfig的时候，会在同一目录自动生成一个对应的libXXX.so.X的文件，作为它的符号链接，如果存在多个X相同的共享库，那么链接到Y最大的那一个
+
+vim: ft=mynotes
