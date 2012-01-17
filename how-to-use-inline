@@ -1,0 +1,97 @@
+=inline的相关知识=
+
+abstract: some knowledge about inline in gcc/g++
+tag: inline gcc nm objdump
+
+[inline的作用]
+为了解决c语言的宏的类型不安全性，又要保留宏能提高运行效率的优点，C++定义了inline关键字
+这个关键字会“建议”编译器将这个函数在调用的地方直接展开，节约了函数调用的开销，对一些短的函数，会有较明显的提升效果
+和宏的不同点就在于，inline函数在展开的时候，会进行类型检查，避免了宏的安全性问题
+
+[如何证明一个函数是否inline]
+前面已经提到，inline关键字是“建议”，至于编译器是否听从这个建议，我们需要如何验证呢？
+这个问题是整篇文章的基础，因为如果无法验证一个“声明”为inline的函数是否真的inline，那么就无从验证各种用法对inline效果的影响
+我一开始考虑用map文件，在编译的时候加上-Wl,-Map=name.map就可以生成一个map文件，但是从这个文件里面，无法看出一个函数是否真的是inline的
+后来经过搜索，找到了nm和objdump这两个命令，都可以来验证，下面是用于验证的源码
+------------------inline.cpp--------------------
+#include <stdio.h>
+inline static void will_inline()
+{
+  printf("this function will be inline");
+}
+inline static void will_not_inline(int i)
+{
+  if(i > 0)
+    will_not_inline(i - 1);
+  printf("%d ", i);
+}
+int main (int argc, char const* argv[])
+{
+  will_inline();
+  will_not_inline(5);
+  return 0;
+}
+------------------------------------------------
+编译成inline.o文件后，执行nm和objdump的结果如下：
+------------------Shell-------------------------
+$ nm inline.o
+00000000 t _ZL15will_not_inlinei
+U __printf_chk
+00000181 T main
+
+$ objdump -t inline.o
+
+inline.o:     file format elf32-i386
+
+SYMBOL TABLE:
+00000000 l    df *ABS*ABS00000000 inline.cpp
+00000000 l    d  .text00000000 .text
+00000000 l    d  .data00000000 .data
+00000000 l    d  .bss00000000 .bss
+00000000 l    d  .rodata.str1.100000000 .rodata.str1.1
+00000000 l     F .text00000181 _ZL15will_not_inlinei
+00000000 l    d  .note.GNU-stack00000000 .note.GNU-stack
+00000000 l    d  .eh_frame00000000 .eh_frame
+00000000 l    d  .comment00000000 .comment
+00000000         *UND*UND00000000 __printf_chk
+00000181 g     F .text000001810000002e main
+------------------------------------------------
+从上面的结果可以看到，will_inline函数没有出现在nm和objdump的结果中，而will_not_inline则出现了（虽然头尾加了一些字符，这些是c++的特点）
+通过以上测试，证实这两个命令可以用来验证一个函数是否被inline
+另外，还可以通过生成汇编码来查看，比如用
+$ g++ -S inline.cpp
+可以生成inline.s这个汇编文件，在里面可以找到will_no_inline函数，但是找不到will_inline这个函数
+
+[会inline和不会inline的一般规则]
+下面这些规则是我从看的资料总结出来的，有待逐个验证
+有可能会被inline的情况
+1. 在函数定义的时候，加上inline关键字
+2. 函数较短，没有循环或递归，用-O2或-O3编译
+3. 类成员函数，在类定义的时候，直接写了函数体，而且函数体较短
+肯定不会被inline的情况（只要满足任一条件，不管上足上面多少个条件，都不会inline）
+1. 直接或间接递归调用到了本身
+2. 函数内有循环
+3. 函数较长（具体多长我暂时不清楚，好像是和一个-finline-limit参数有关）
+4. 函数体的定义在当前函数的后面（也就是先声明，后使用，最后定义的函数）
+5. 用gcc编译时，没有加上任何-O参数
+6. 用了-no-inlie参数
+
+[static和extern对inline的影响]
+以下还是看资料的，待测试
+在一个文件里面，如果函数同时有inline和static，一般会inline，而且只要该文件中没有明确用到这个inline函数的指针，那么这个函数就没有地址
+如果没有static，编译器会把当前文件中的调用展开，同时也会给一个函数地址，以供其他文件使用，在其它文件中，就不是直接展开的了
+如果加了extern，那么无论什么情况，如果这个函数可以inline，那么就不会有地址了
+
+[部分和inline相关的编译参数]
+1 -O
+不论是-O， -O2， -O3， -Os等优化，如果没有任何优化参数，那么无论任何函数，都不会inline
+所以，要发挥inline的作用，必须加上一个优化参数
+2 -Wall或-Winline
+如果有声明为inline的函数，但是编译器拒绝inline，那么会发出一个warning，这样我们就可以知道哪些函数没有被inline了
+这里需要注意，必须同时有优化选项，否则是没有warning的，因为所有函数都不会被inline
+3 -fno-inline
+让编译器忽略那些inline关键字，也就是在有优化的情况下，忽略所有inline建议，不过自动的inline还是会有的（“待验证”）
+4 -finline-functions
+让编译器自动inline那些较短的函数，在-O2的时候会开启
+
+vim: ft=mynotes
