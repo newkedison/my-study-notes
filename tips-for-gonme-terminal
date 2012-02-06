@@ -1,0 +1,103 @@
+=gnome-terminal技巧=
+
+abstract: some usual and useful tips for gnome-terminal
+tags: gnome-terminal maximize hold 
+
+[基本用法]
+gnome-terminal命令用于打开一个新的终端，直接在命令行
+$ gnome-terminal
+就可以打开一个新的终端，有一些常用参数：
+打开后自动最大化
+$ gnome-terminal --maximize
+打开后全屏
+$ gnome-terminal --full-screen
+设置标题
+$ gnome-terminal --title="new title"
+打开多个终端，多个tab
+$ gnome-terminal --window --window #打开两个
+$ gnome-terminal --window --tab --window --tab --tab #打开两个，第一个两个tab，第二个3个tab
+设置打开的位置和大小(宽度x高度+左侧偏移量+上方偏移量)
+$ gnome-terminal --geometry=80x25+10+10
+
+[启动后自动执行命令]
+有两个参数可以实现这个功能，-e和-x，这两个区别在于：
+-e 可以出现多次，如果在所有--window前面，表示对所有window和tab起作用，
+   如果在--window或者--tab后面，表示只针对这个tab执行，要注意-e后面只能有一个参数
+   也就是说如果有空格，需要用引号，具体见后例
+-x 只能出现一次，在-x后面的所有内容，均认为是要执行的命令，所以可以出现空格
+   这些命令是针对所有tab都执行的
+比如：
+$ gnome-terminal -e ls
+$ gnome-terminal -x ls
+这两个的执行结果都一样，就是新的终端闪一下就没了，有几种办法：
+一种是修改terminal的配置，在terminal点右键，选择Profiles->Profile Preferences
+然后找到Title and Command，里面有一项When command exits，后面选择为
+Hold the terminal open，然后就可以了
+第二种是把结果重定向给less，这样less执行完之前，是不会退出的
+$ gnome-terminal -x ls|less
+第三种是在bash里面再启用一个bash
+$ gnome-terminal -x bash -c "ls; exec bash"
+$ gnome-terminal -e 'bash -c "ls; exec bash"'
+注意最后一个命令是exec bash，如果直接写bash也行，相当于开了一个子shell，这样有个
+缺点，就是直接按关闭按钮的话，会提示还有程序在运行
+
+需要注意的是，这里执行的命令，在调用.bashrc之前，所有.bashrc的所有配置都无效
+如果需要用到.bashrc里面的内容，有个变通的办法，在.bashrc最后加上一句
+--------------------.bashrc--------------------
+其他内容
+
+#最后加上这句
+evel "$RUN_AFTER_BASHRC"
+-----------------------------------------------
+然后在写命令的时候，修改RUN_AFTER_BASHRC这个变量，就可以实现让.bashrc调用这个命令
+$ gnome-terminal -x bash -c 'export RUN_AFTER_BASHRC="ls --help"; exec bash'
+或者下面的写法比较简单（注意对所有tab生效），也不会自动关闭了
+$ RUN_AFTER_BASHRC="ls" gnome-terminal
+来源：http://superuser.com/questions/198015/open-gnome-terminal-programmatically-and-execute-commands-after-bashrc-was-execu
+
+[打开一个terminal并预先输好一段文字]
+来源：http://askubuntu.com/questions/5363/how-to-start-a-terminal-with-certain-text-already-input-on-the-command-line
+这个需求比较偏门，解决方法不错，就是利用expect这个工具，最后的程序如下
+----------------------------myprompt-----------------------
+#!/usr/bin/expect
+
+#trap sigwinch and pass it to the child we spawned
+#this allows the gnome-terminal window to be resized
+trap {
+  set rows [stty rows]
+    set cols [stty columns]
+    stty rows $rows columns $cols < $spawn_out(slave,name)
+} WINCH
+
+set arg1 [lindex $argv 0]
+
+# Get a Bash shell
+spawn -noecho bash
+
+# Wait for a prompt
+expect "$ "
+
+# Type something
+send $arg1
+
+# Hand over control to the user
+interact
+
+exit
+------------------------------------------------
+调用方法（注意文件的路径要写全）：
+gnome-terminal -e "./myprompt \"my text to be posted\""
+
+[添加一个”用vim打开“的脚本]
+研究这个gnome-terminal的目的，是为了写一个脚本，实现右键选一个文件，然后可以
+用vim打开
+最后的脚本文件如下（两种方法都写了）
+-------------------~/.gnome2/nautilus-scripts/OpenWithVIM----------------------
+#!/bin/bash
+
+gnome-terminal -x bash -c 'export RUN_AFTER_BASHRC="vim $NAUTILUS_SCRIPT_SELECTED_FILE_PATHS"; exec bash'
+#RUN_AFTER_BASHRC="vim $NAUTILUS_SCRIPT_SELECTED_FILE_PATHS" gnome-terminal
+-------------------------------------------------------------------------------
+不过选中多个文件还不行，因为也没这个需要，所以暂时就这样了
+
+vim: ft=mynotes
