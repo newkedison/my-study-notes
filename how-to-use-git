@@ -44,6 +44,10 @@ $ git checkout <文件名>
 我用的是
 $ export EDITOR=vim
 另外还可以修改.git/config文件，在core段，加入editor=vim这一句（我还没测试过，不过应该好使）
+如果使用
+$ git commit --verbose
+提交，还可以在提交的内容上，同时显示diff的结果，不过要注意，这些结果是没有被注释的
+也就是说，提交的时候，也会作为提交说明，如果这不是需要的行为，必须把这些内容注释掉
 
 [让Git记住Google Code的用户名和密码]
 在git-push的时候，需要输入用户名和密码，每次输入相当的麻烦，这时候可以借助~/.netrc文件，让git记住我们在Google Code上的密码
@@ -89,7 +93,7 @@ $ git diff HEAD^ HEAD
 忽略行尾的空格
 
 -b, --ignore-space-change
-忽略行为空格，连续多个空格均认为是一个空格
+忽略行尾空格，而且连续多个空格均认为是一个空格
 
 -w, --ignore-all-space
 忽略所有空格
