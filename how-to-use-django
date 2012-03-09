@@ -70,12 +70,20 @@ application = django.core.handlers.wsgi.WSGIHandler()
 当然，如果出现意外，那也是正常的，调试的技巧参考"[调试技巧]"小节
 
 [调试技巧]
-1. 无敌的print
+1 无敌的print
 据称，无论任何语言编写的程序，只要能输出调试语句，那么90%以上的问题都可以解决
 在python+django+apache的环境下，可以利用apache的错误日志来辅助调试
 在任何可以执行到的代码中，使用：
 print >> sys.stderr, "this is debug info"
 就可以在apache的错误日志中找到该行输出。apache的错误日志可以通过httpd.conf配置，
 默认的位置在安装目录下的logs\error.log
+2 利用出错页面
+django默认是开启调试模式的，如果代码出现异常，会出现一个包含丰富调试信息的页面，
+这个页面包括了错误的位置，调用堆栈，还有当前局部变量的值，所以，有时候我们可以
+自己引发一个错误，然后到错误页面查看需要的信息，和打断点差不多，不过就是不能继续
+执行
+引发错误的方法有很多，使用assert算是比较方便的，在需要停止的地方，加入：
+assert False
+然后就去分析错误页面的数据吧
 
 vim: ft=mynotes
