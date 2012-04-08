@@ -1,0 +1,67 @@
+=快速建立一个hg服务器（hgserve）=
+abstract: easily build a hg server by hgserve
+tag: hg server serve
+
+我们平时用的最多的，当然是hg的client操作，commit，push，pull，update等等，但是
+当我们需要在两个电脑之间同步版本库的时候，必然有一个要作为server，让另外一个push
+或者pull。
+hg建立一个server的方法有很多，在其官网上列出了好几种方案，并比较了优劣
+参考：http://mercurial.selenic.com/wiki/PublishingRepositories?action=show&redirect=ServerInstall
+因为我们只是要在我们自己的两台电脑之间同步，所以可以采用最简单的方案hg serve，
+这种方案的优点是配置极为简单，缺点是缺少用户验证，没有安全性可言
+
+下面介绍hg serve的使用方法
+在Linux下：
+1. 安装hg
+2. 找到一个版本库所在的文件夹（里面应该有一个.hg文件夹）
+$ hg serve
+即可启动，可以用-p指定端口，默认是8000
+3. 打开浏览器，查看http://localhost:8000，如果能看到版本库的信息，则表示服务已经
+启动
+4. 其他的电脑，就可以通过
+$ hg clone http://ip:8000 .
+来clone这个版本库，也可以从这个版本库pull更新。
+
+在Windows下：
+1. 安装TortoiseHg
+2. 找到一个版本库所在的文件夹（里面应该有一个.hg文件夹），右键，选择TortoiseHg
+下级菜单的Web Server，然后就启动好了
+3,4步同上面的linux操作
+
+操作起来真的非常简单，没有什么额外的依赖，不过也有一个缺点，就是只能pull，不能
+push，如果要实现push，要在另外一台电脑开hg serve，然后让中心版本库反过来pull
+
+其实，hg serve是允许push的，只不过是默认关闭了而已，这也是为了安全性的考虑，打开
+push功能可以如下操作
+Linux：
+1. 找个地方（比如版本库根目录或者.hg目录）编辑一个web.conf文件，内容如下：
+（假设文件放在版本库根目录）
+-----------------web.conf-----------------------
+[web]
+allow_push=*
+push_ssl=false
+
+[paths]
+test=.
+------------------------------------------------
+2. 然后启动服务器的命令改为
+$ hg serve --web-conf web.conf
+这样，就允许push了，这段配置写在hgrc文件里面也可以，但是可以注意到这样对push是
+没有任何限制的，非常的不安全，所以还是单独写一个文件，可以提醒注意。
+另外要注意的就是paths段这么设置了之后，前面clone的命令要相应的改为
+$ hg clone http://ip:8000/test .
+才能访问了
+3. 上面的配置文件很容易看懂，但是只能这么写，我试过修改push_ssl为true，然后使用
+ssl来推送，始终是权限不足，而allow_push如果指定了用户名，会一直提示版本库不存在
+从stackoverflow上提问的来看，似乎hg serve是无法集成用户验证的，必须使用其他的
+方案才能实现
+
+Windows：
+1. 启动Web Server后，先点停止，然后选设置，把里面的ssl加密推送改为False，把“允许
+推送”改为*，然后选择OK退出
+2. 然后启动服务器，就可以push了。
+
+再次提醒，hg serve配置简单，使用方便，但是安全性极低，所以一般需要的时候再启动，
+平时还是关闭的好。
+
+vim: ft=mynotes
