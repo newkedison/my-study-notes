@@ -4,6 +4,92 @@ abstract: 编译安装vim7.3的心得记录
 tags: vim make Makefile install
 
 [前言]
+第四次编译安装vim，这次是在一个VPS上全新安装的，和以前的不同点在于：
+1. VPS是通过SSH登陆的，没有GUI，所以gvim就不需要了（其实即使在现在的系统，gvim我
+也已经好久没用过了，下一次其实不安装也可以）
+2. 为了减少麻烦，LUA和Perl接口都不编译了，反正我近期是不可能用这两个的
+3. 由于系统是Ubuntu10.04，apt-get能安装的最新版本居然只有7.2，所以必须自己用
+源码来装
+
+[下载源码]
+还是通过hg把整个版本库clone下来了，好像有80多M，不过VPS下载速度很快，可能是因为
+主机在美国的原因吧。
+这次的版本是V7.3.496
+
+[改Makefile]
+修改src/Makefile，修改项如下：
+-------------------------diff-----------------------------
+327c327
+< #CONF_OPT_GUI = --disable-gui
+---
+> CONF_OPT_GUI = --disable-gui
+395c395
+< #CONF_OPT_FAIL = --enable-fail-if-missing
+---
+> CONF_OPT_FAIL = --enable-fail-if-missing
+422c422
+< #CONF_OPT_PYTHON = --enable-pythoninterp
+---
+> CONF_OPT_PYTHON = --enable-pythoninterp
+442c442
+< #CONF_OPT_CSCOPE = --enable-cscope
+---
+> CONF_OPT_CSCOPE = --enable-cscope
+460c460
+< #CONF_OPT_MULTIBYTE = --enable-multibyte
+---
+> CONF_OPT_MULTIBYTE = --enable-multibyte
+501c501
+< #CONF_OPT_FEAT = --with-features=huge
+---
+> CONF_OPT_FEAT = --with-features=huge
+504c504
+< #CONF_OPT_COMPBY = "--with-compiledby=John Doe <JohnDoe@yahoo.com>"
+---
+> #CONF_OPT_COMPBY = "--with-compiledby=newkedison <newkedison@gmail.com>"
+----------------------------------------------------------
+主要的区别是打开了这两个配置
+CONF_OPT_GUI = --disable-gui
+CONF_OPT_FAIL = --enable-fail-if-missing
+第一个是取消gui，也就是不安装gvim，第二个是如果哪些接口不满足的话，就停止编译，
+这个选项很好，省了我很多的事情，因为默认的情况下，如果一些接口找不到，只要不影响
+编译，还是会继续编译下去，然后最后就少了这个接口，这还不如在编译的时候就提示，我
+才能明确的知道缺哪些接口，而不需要去那长的要命的config.log里面找
+其他的和以前没区别
+
+[编译]
+执行
+$ make
+编译，提示找不到编译器，我晕，居然连gcc都还没装，于是
+$ sudo apt-get install gcc
+$ sudo apt-get install g++
+$ sudo apt-get install build-essential
+原来装gcc时不会自动赠送g++，所以要再装g++，后来搜了一下，说用最后一个就可以了，
+反正我这三个都执行了一遍
+第二次make，提示找不到python接口，我的python是装了，但python-dev没装，于是
+$ sudo apt-get install python-dev
+第三次make，提示找不到ncurses，于是
+$ sudo apt-get install ncurses-dev
+第四次make成功，然后
+$ sudo make install
+也成功
+[测试]
+执行
+$ vim
+虽然能打开，但是提示了一堆错误。
+这个时候，我已经用git把我自己用的.vim同步下来放好了，仔细看看提示的信息，都是在
+报一些插件的错误，主要引起错误的原因是续行符，大量出现这样的错误提示
+E10: \ should be followed by /, ? or & 
+搜索了一下，原来是忘记关闭兼容模式了，而原因是我光把.vim弄好了，没有把.vimrc放好
+所以把.vimrc放在正确的位置后，那些错误就没有了
+但是出现了另外一个错误，因为VPS上没有装中文包，所以.vimrc里面一些zh_CN的就有问题
+我把他们都去掉了
+[总结]
+这次安装很顺利，可能是已经多次安装，没什么挑战性了吧。
+
+************以下是以前第三次安装时写的心得***********************
+
+[前言]
 这次应该是第三次编译安装VIM了，以前第一次编译的时候写了一篇文章，这次也写一下吧
 重新编译的动机，是因为
 $ vim --version | grep python
