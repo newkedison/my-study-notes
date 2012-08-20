@@ -123,4 +123,10 @@ $ od -vAn -N16 -w4 -tu4 < /dev/random
 fread需要的字节数直接到一个整型变量中，后面就可以根据需要获得指定范围内的随机数
 最后别忘了fclose
 
+[pstree命令]
+这个命令用来查看一个进程的父进程，要比ps auxf命令要清晰，格式很简单
+$ pstree -p | grep bash
+这样可以查看所有含有bash的命令，已经他的父进程和子进程
+-p参数表示同时列出PID，然后要kill还是要干嘛就方便了
+
 vim: ft=mynotes
