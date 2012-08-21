@@ -1,113 +1,182 @@
-=Git常用命令及使用心得=
+---
+title: Git常用命令及使用心得
+description: Git陡峭的学习曲线，使得我实在无法光靠脑子记住那么多的命令，未免同样的问题一遍又一遍的Google，还是记录下来比较好
+created: !!timestamp '2012-01-14 18:18:15'
+tags:
+    - git
+    - SourceControl
+---
 
-Git陡峭的学习曲线，使得我实在无法光靠脑子记住那么多的命令，未免同样的问题一遍又一遍的Google，还是记录下来比较好
+{% raw %}
 
-[本文约定]
-1.如无特别说明，“git add“， ”git-add“，”add“都指的是”git add“这个命令，其他类似
-2.所有$开头的行，都是指命令行输入的内容
+## 本文约定
 
-[一般提交流程]
-1.首先把当前改动的内容，先加入暂存区（后文详述）
-$ git add .
-也可以指定文件名以实现只加入部分改变
-2.提交到本地仓库，用-m参数指定提交说明，不能为空，否则提交失败
-如果不用-m，则会调用文本输入工具，让我们输入，反正就是不允许没有任何说明的提交
-$ git commit -m "....."
-3.如果决定要同步到中心库，则用git-push
-$ git push
-输入密码后，正常来说就可以提交成功了。
+1. 如无特别说明，“git add“， ”git-add“，”add“都指的是”git add“这个命令，其他类似
+2. 所有$开头的行，都是指命令行输入的内容
+
+## 一般提交流程
+
+1. 首先把当前改动的内容，先加入暂存区（后文详述）
+
+        $ git add .
+
+    也可以指定文件名以实现只加入部分改变
+
+2. 提交到本地仓库，用-m参数指定提交说明，不能为空，否则提交失败
+
+    如果不用-m，则会调用文本输入工具，让我们输入，反正就是不允许没有任何说明的提交
+
+        $ git commit -m "....."
+
+3. 如果决定要同步到中心库，则用git-push
+
+        $ git push
+
+    输入密码后，正常来说就可以提交成功了。
 
 注意：
-1.可以多次commit后，一次性push
-2.用以下命令，可以省略git-add，-a是和--all等效，表示把所有修改放入暂存区
-$ git commit -a -m "...."
 
-[暂存区（staging area）]
+1. 可以多次commit后，一次性push
+2. 用以下命令，可以省略git-add，-a是和--all等效，表示把所有修改放入暂存区
+
+        $ git commit -a -m "...."
+
+## 暂存区（staging area）
+
 git在提交的时候，有一个暂存区的概念，所有的修改，不会自动放入暂存区，必须手动使用git-add命令，才能把修改加入暂存区，而只有在暂存区的修改，才会在下一次commit时被提交到本地仓库
+
 所以，git-add的概念和SVN以及Hg不同，并不只是把原来没有在版本库中的文件加入版本管理，即使是修改过的文件，也需要add，另外，在merge的时候，add可以把解决好的冲突加入暂存区
+
 使用git-status命令，可以看到，如果是新增文件，状态是untracked，而如果是修改了文件，状态是not staged，这两种状态，都可以通过git-add，将其加入暂存区
+
 另外，使用git add -i命令，可以交互式的进行add操作，省却输文件名的麻烦
 
 如果是新增的文件，一开始状态是Untracked，执行git-add后，状态是staged，如果要取消，可以用
-$ git reset HEAD <文件名>
+
+    $ git reset HEAD <文件名>
+
 如果是修改文件，一开始状态是Unstaged，执行git-add后，变成staged，如果要取消，也是用上面的命令
+
 另外，如果文件已修改，但是还没add，状态是unstaged的时候，想放弃修改，恢复原来的版本，也就是实现revert的功能，则用
-$ git checkout <文件名>
+
+    $ git checkout <文件名>
+
+如果是误删除的文件, 也是通过checkout来恢复, 直接`git checkout .`就可以了
 
 暂时发现暂存区的一个作用
+
 在提交之前，可能我们修改了多个文件，这些修改可能不是针对同一个问题的修改，我们不希望这些文件被一次性commit，那么可以先将部分文件加入暂存区，先commit，然后再把剩下的全部或者部分文件加入暂存区，继续commit。
 
-[使用vim编写提交说明]
+## 使用vim编写提交说明
+
 默认的编写提交说明的工具，是古董级的nano，相当不好用，所以有必要换成vim
-参考：http://imtx.me/archives/1201.html
-有好几种办法
-我用的是
-$ export EDITOR=vim
+
+参考[这里](http://imtx.me/archives/1201.html)有好几种办法, 我用的是
+
+    $ export EDITOR=vim
+
 另外还可以修改.git/config文件，在core段，加入editor=vim这一句（我还没测试过，不过应该好使）
+
 如果使用
-$ git commit --verbose
+
+    $ git commit --verbose
+
 提交，还可以在提交的内容上，同时显示diff的结果，不过要注意，这些结果是没有被注释的
 也就是说，提交的时候，也会作为提交说明，如果这不是需要的行为，必须把这些内容注释掉
 
-[让Git记住Google Code的用户名和密码]
+## 让Git记住Google Code的用户名和密码
+
 在git-push的时候，需要输入用户名和密码，每次输入相当的麻烦，这时候可以借助~/.netrc文件，让git记住我们在Google Code上的密码
+
 其实Google Code的Source的CheckOut页面，上面已经写了方法，不过我一开始没有完全按照上面的步骤操作，导致总是没测试成功
+
 首先要在~/.netrc文件添加以下内容（局部手工打码）
--------------------文件~/.netrc-------------------
-machine code.google.com
-login **********@gmail.com 
-password *****************
---------------------------------------------------
+
+文件: ~/.netrc
+
+    machine code.google.com
+    login **********@gmail.com 
+    password *****************
+
 login后面是邮箱名，password后面是密码，这个密码可以是邮箱密码，也可以是另外一个Googe生成的，专用于Google Code的密码
+
 因为这个文件是明文，Google为了保护我们的邮箱密码，专门为Google Code自动生成一个随机密码，
-只要登陆着，然后访问https://code.google.com/hosting/settings,就可以看到这个随机密码，我们访问Google Code的时候，这个密码的作用和邮箱密码一样
+
+只要登陆着，然后访问<https://code.google.com/hosting/settings>, 就可以看到这个随机密码，我们访问Google Code的时候，这个密码的作用和邮箱密码一样
+
 如果这个随机密码泄露，也没必要担心，只要点击“Regenerate”按钮，即可重新生成一个，前面的那个自动作废
 
 我一开始这么设置了之后，发现每次push的时候，还是要密码，后来检查".git/config"文件，里面有这么一行(局部手工打码)
-	url = https://**********@code.google.com/p/my-study-notes/
+
+    url = https://**********@code.google.com/p/my-study-notes/
+
 里面已经写了我的邮箱名，这样本来是可以省去填写用户名，但是带来的副作用就是密码就不会自动读取~/.netrc的设置了，所以，把这行改为
-	url = https://code.google.com/p/my-study-notes/
+
+    url = https://code.google.com/p/my-study-notes/
+
 这样用户名就没有了，git会自动先去~/.netrc中寻找
 
-[git-diff]
+## git-diff
+
 git-diff用于比较当前的文件有哪些改变，通过不同的参数，可以比较不同的内容：
-$ git diff [filename]
+
+    $ git diff [filename]
+
 比较暂存区中的内容和暂时没有放到暂存区的内容的区别，也就是从上一次git-add过后被修改过的内容
-$ git diff --cached [filename]
+
+    $ git diff --cached [filename]
+
 比较暂存区中和上一次commit的内容，也就是执行$git commit时会提交的内容
-$ git diff HEAD [filename]
+
+    $ git diff HEAD [filename]
+
 比较当前文件和上一次commit的内容，也就是执行$git commit -a时会提交的内容
-$ git diff test
+
+    $ git diff test
+
 不是和当前分支比较，而是和test分支比较
-$ git diff HEAD^ HEAD
+
+    $ git diff HEAD^ HEAD
+
 比较当前分支前面两次commit之间改变了什么，也就是上一次commit修改了什么
 
 另外，还有一些参数，可以配合上面的命令
---diff-filter=[(A|C|D|M|R|T|U|X|B)]
+
+* --diff-filter=[(A|C|D|M|R|T|U|X|B)]
+
 仅列出（增加|复制|删除|修改|重命名|类型变化（比如文件变成文件夹）|未合并（Unmerge）|未知（Unknown）|损坏（Broken））的变化，这些字母可以任意多少个以任意顺序组合
 
---name-status
-仅用一个字母表示每个文件的状态，不列出具体修改，字母的意思和上面的一样
+* --name-status
 
---ignore-space-at-eol
-忽略行尾的空格
+    仅用一个字母表示每个文件的状态，不列出具体修改，字母的意思和上面的一样
 
--b, --ignore-space-change
-忽略行尾空格，而且连续多个空格均认为是一个空格
+* --ignore-space-at-eol
 
--w, --ignore-all-space
-忽略所有空格
+    忽略行尾的空格
 
---exit-code
-设定git-diff的返回值与diff命令一致，1表示有区别，0表示没有区别
+* -b, --ignore-space-change
 
---quiet
-不产生任何输出，同时自动定义--exit-code
+    忽略行尾空格，而且连续多个空格均认为是一个空格
+
+* -w, --ignore-all-space
+
+    忽略所有空格
+
+* --exit-code
+
+    设定git-diff的返回值与diff命令一致，1表示有区别，0表示没有区别
+
+* --quiet
+
+    不产生任何输出，同时自动定义--exit-code
 
 PS：
+
 1. 有时候为了避免歧义，区分是分支名字还是文件名，在文件名前面加上" -- "，注意和文件名之间要有空格
 2. 可以比较任意两个历史commit之间的区别，先要用git-log看这两个commit的hash值，然后用
-$ git diff 0123456 abcdef0
+        $ git diff 0123456 abcdef0
 
 
-vim: ft=mynotes
+{% endraw %}
+{# vim: ft=markdown
+#}

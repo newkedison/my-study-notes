@@ -1,113 +1,174 @@
-=在Excel中调用dll=
+---
+title: 在Excel中调用dll
+description: call dll(written by VC) in Excel through VBA
+created: !!timestamp '2012-01-14 18:18:15'
+tags:
+    - Excel
+    - dll
+    - cpp
+---
 
-abstract: call dll(written by VC) in Excel through VBA
-tags: Excel VBA dll VC
+{% raw %}
 
-[概述]
+## 概述
+
 在Excel中可以通过VBA来定义自己需要的函数，以实现复杂的功能，但是存在不少缺点：
+
 1. 运行速度慢
 2. VB的语法太久没用过，都忘光了，而且和无论C/Pascal/C#比，实现简单的功能是比较
 方便，但是实现复杂的功能就很纠结了
 3. 保密性不强，VBA的加密很容易就找到破解了
+
 所以，在完成一些复杂的功能的时候，还是通过调用外部工具的方法来实现比较好，就目前
 我知道的，最方便的方法有两种，一种是调用外部程序，另一种是调用外部dll，这里主要
 记录调用dll的方法，也顺便先提一下调用外部程序
 
-[调用外部程序]
+## 调用外部程序
+
 调用外部程序的优点，是可以启动一些不是我们自己写的软件，或者是启动一些GUI软件，
 但是缺点就是很难实现安静的调用一些功能，这个后面具体讲
-1 基本调用方法
-在VBA里面，有三种方法可以来调用一个外部程序
-（1）shell "notepad.exe"
-这种方法一般都是用来启动一些GUI程序的
-（2）Set obj = CreateObject("WSCript.Shell")
-     Set ret = obj.Exec("dir")
-这种方法一般用于执行一个DOS命令，运行的时候会弹出一个命令行的黑窗口，
-（3）Set obj = CreateObject("WSCript.Shell")
-     Set ret = obj.run("dir", 0, True)
-这种方法和上面的类似，不过通过后面两个参数，可以实现一些额外的控制
-上面第二种和第三种方法的区别，主要有几个方面
-（1）Exec方法的返回值是一个对象，可以通过其StdOut.ReadAll()取得标准输出，以及
-StdErr.ReadAll()取得错误输出，而Run方法的返回值是该命令的返回值，不能取得标准
-输出和标准错误
-（2）Run方法可以通过第二个参数控制窗口的显示，一般设置为0，也就是隐藏
-（3）Run方法可以通过第三个参数控制函数返回的行为，也就是是否等待执行结束再返回
-2 不足之处
-从上面的方法，可以看到，如果是启动外部程序，然后让用户自己去操作的，那用shell就
-最方便了，如果是要调用一些命令行的程序，最好用后两种，但是不知道M$是出于什么考虑
-居然设计了这么两个纠结的函数，当我想实现获取标准输出，又想隐藏窗口的时候，就完全
-无语了。当然，有一种方法是用Run，然后在命令里面把输出重定向到文件，再用文件操作
-把他读出来，但是这样做的效率就可想而知了。
 
-[调用外部dll]
+1. 基本调用方法
+
+    在VBA里面，有三种方法可以来调用一个外部程序
+
+    * shell
+
+            shell "notepad.exe"
+
+        这种方法一般都是用来启动一些GUI程序的
+
+    * WSCript.Shell Exec
+
+            Set obj = CreateObject("WSCript.Shell")
+            Set ret = obj.Exec("dir")
+
+        这种方法一般用于执行一个DOS命令，运行的时候会弹出一个命令行的黑窗口，
+
+    * WSCript.Shell run
+
+            Set obj = CreateObject("WSCript.Shell")
+            Set ret = obj.run("dir", 0, True)
+
+        这种方法和上面的类似，不过通过后面两个参数，可以实现一些额外的控制
+
+    上面第二种和第三种方法的区别，主要有几个方面
+
+    * Exec方法的返回值是一个对象，可以通过其StdOut.ReadAll()取得标准输出，以及
+    StdErr.ReadAll()取得错误输出，而Run方法的返回值是该命令的返回值，不能取得标准
+    输出和标准错误
+    * Run方法可以通过第二个参数控制窗口的显示，一般设置为0，也就是隐藏
+    * Run方法可以通过第三个参数控制函数返回的行为，也就是是否等待执行结束再返回
+
+2. 不足之处
+
+    从上面的方法，可以看到，如果是启动外部程序，然后让用户自己去操作的，那用shell就
+    最方便了，如果是要调用一些命令行的程序，最好用后两种，但是不知道M$是出于什么考虑
+    居然设计了这么两个纠结的函数，当我想实现获取标准输出，又想隐藏窗口的时候，就完全
+    无语了。当然，有一种方法是用Run，然后在命令里面把输出重定向到文件，再用文件操作
+    把他读出来，但是这样做的效率就可想而知了。
+
+## 调用外部dll
+
 这里主要介绍通过VC6写dll，然后在Excel的VBA中调用的方法，用其他工具也能生成dll，
 等需要的时候再去了解
-1 用VC6写dll
-函数什么的和其他的Console程序没啥区别，主要是要在又有的函数上，封装出来一个dll的
-接口函数，当然，直接把原来的函数改成dll接口函数也行。接口的函数要注意几点：
-（1）在返回值后面要加上__stdcall，也就是把原来的
-int foo();改成
-int __stdcall foo();
-（2）要新建一个.def文件，声明接口函数，比如foo.def
-LIBRARY MyFoo
-  EXPORTS
-    foo
-其中MyFoo是dll文件的名字，最好是和文件名（去掉.dll）一致，这样可以少一个warning
-最后的foo是导出的函数名
-下面讲一下具体的操作：
-（1）在VC6新建一个Win32 Dynamic-Link Library工程，选择那个empty的工程就行
-（2）把原有的程序文件加进来，当然如果还没写，那就随便写个sum函数测试一下也行，
-比如： int sum(int a, int b){return a + b;}
-（3）封装dll接口，比如：
-//foo.h
-int __stdcall foo(int a, int b);
-//foo.cpp
-int __stdcall foo(int a, int b){return sum(a, b)}
-这里也可以直接修改sum函数，加上__stdcall就行，不过我还是喜欢封装一层
-（4）写def文件，上面已经写过了
-（5）在菜单Project->Settings->Link->Output file name下面，修改dll的文件名，比如
-Debug/MyFoo.dll，这里当然不改也可以
-（6）编译，如果程序没错误的话，就可以到Debug文件夹找到生成的dll文件了
-2 在Excel的VBA里面调用
-在VBA里面调用，首先是要声明从外部dll导入函数，这个和VB其实一模一样，所以参考很多
-VB的教程就可以了，具体步骤如下：
-（1）按Alt+F11打开VBA编辑器，看起来就是一个内嵌的VB
-（2）在左边找到“模块1”双击，在右边可以打开模块的代码窗口，下面的代码都写在这里
-（3）首先声明从dll导入的函数，比如
-Private Declare Function foo Lib "dll文件全路径" (ByVal a as Integer, ByVal b as Integer) as Integer
-这个声明有几个要点：第一是必须用private，第二是dll文件必须给出全路径，这个有个
-变通方法，下面再讲，第三是函数参数在VC里面如果不是指针，都必须加上ByVal，如果是
-指针，那么最好也写上ByRef
-（4）下面就像调用普通的VB函数调用就可以了
-3 注意点
-（1）VB和C的变量类型，很多不是完全对应的，我用了int和double都还可以，其他的那些
-我没测试，不过网上有很多对照的表格，如果需要的话，再搜索好了。
-（2）如果是函数参数是传值的，VB声明时必须加上ByVal，如果是指针，VB里面用ByRef，
-然后用数组的某个元素作为实参，一般是arr(0)或者arr(1)，这个看个人需要了
-4 实用技巧
-（1）调用外部程序时使用相对路径
-在用上面提到的三种方法调用外部文件时，都需要指明程序的绝对路径，否则是找不到的，
-但是我们一般希望，这个程序就是Excel文件放在一起，最好是可以用相对路径来引用。这
-时候需要用到ThisWorkBook.Path这个变量，这里保存的就是Excel文件所在的目录，所以，
-我们可以用Shell ThisWorkBook.Path & "\foo.exe"来调用当前文件夹的foo.exe文件。
-（2）调用外部dll时使用相对路径
-还上面同样的问题，调用dll的时候，也需要指明绝对路径，这个也是很不方便，因为dll的
-位置是在声明的时候就要指定，那里用不了ThisWorkBook.Path，所以要用另外一个方法，
-首先双击左边的ThisWorkBook节点，右边会打开另外一个代码窗口。然后添加以下函数
-Private Sub Workbook_Open()
-  Dim drv as String
-  Dim path as String
-  path = ThisWorkbook.Path
-  drv = Left(path, 3)
-  ChDrive drv
-  ChDir path
-End Sub
-这个函数在打开Excel的时候，会被自动执行，他的功能就是把当前目录切换到当前的文件
-夹，这样直接给出dll的名字的时候，就会在当前文件夹找到匹配的dll文件
-（3）有个叫QuickView的工具，在Win2000前系统有自带，但是现在没有了，不过网上很
-容易可以找到XP能用的版本。这个工具，把dll文件直接拖进去，可以看到里面的导出函数
-这样在写dll的时候，就可以看看导出是否正确了，类似的工具应该还有不少
-（4）VBA的函数，有一种数据类型是Range，可以用来接受一个范围的单元格，然后用其
-Cells(i, j).Value，可以获得其中的单元格数据，用来计算
 
-vim: ft=mynotes
+1. 用VC6写dll
+
+    函数什么的和其他的Console程序没啥区别，主要是要在又有的函数上，封装出来一个dll的
+    接口函数，当然，直接把原来的函数改成dll接口函数也行。接口的函数要注意几点：
+
+    1. 在返回值后面要加上`__stdcall`，也就是把原来的
+    `int foo()`;改成
+    `int __stdcall foo();`
+    1. 要新建一个.def文件，声明接口函数，比如foo.def
+
+            LIBRARY MyFoo
+              EXPORTS
+                foo
+
+    其中MyFoo是dll文件的名字，最好是和文件名（去掉.dll）一致，这样可以少一个warning
+    最后的foo是导出的函数名
+
+    下面讲一下具体的操作：
+
+    1. 在VC6新建一个Win32 Dynamic-Link Library工程，选择那个empty的工程就行
+    1. 把原有的程序文件加进来，当然如果还没写，那就随便写个sum函数测试一下也行，
+    比如： 
+    
+            int sum(int a, int b){return a + b;}
+
+    1. 封装dll接口，比如：
+
+            //foo.h
+            int __stdcall foo(int a, int b);
+            //foo.cpp
+            int __stdcall foo(int a, int b){return sum(a, b)}
+
+    这里也可以直接修改sum函数，加上`__stdcall`就行，不过我还是喜欢封装一层
+
+    1. 写def文件，上面已经写过了
+    1. 在菜单Project->Settings->Link->Output file name下面，修改dll的文件名，比如
+    Debug/MyFoo.dll，这里当然不改也可以
+    1. 编译，如果程序没错误的话，就可以到Debug文件夹找到生成的dll文件了
+
+2. 在Excel的VBA里面调用
+
+    在VBA里面调用，首先是要声明从外部dll导入函数，这个和VB其实一模一样，所以参考很多
+    VB的教程就可以了，具体步骤如下：
+
+    1. 按Alt+F11打开VBA编辑器，看起来就是一个内嵌的VB
+    1. 在左边找到“模块1”双击，在右边可以打开模块的代码窗口，下面的代码都写在这里
+    1. 首先声明从dll导入的函数，比如
+
+            Private Declare Function foo Lib "dll文件全路径" (ByVal a as Integer, ByVal b as Integer) as Integer
+
+    这个声明有几个要点：第一是必须用`private`，第二是dll文件必须给出全路径，这个有个
+    变通方法，下面再讲，第三是函数参数在VC里面如果不是指针，都必须加上`ByVal`，如果是
+    指针，那么最好也写上`ByRef`
+    1. 下面就像调用普通的VB函数调用就可以了
+
+3. 注意点
+
+    1. VB和C的变量类型，很多不是完全对应的，我用了int和double都还可以，其他的那些
+    我没测试，不过网上有很多对照的表格，如果需要的话，再搜索好了。
+    1. 如果是函数参数是传值的，VB声明时必须加上`ByVal`，如果是指针，VB里面用`ByRef`，
+    然后用数组的某个元素作为实参，一般是`arr(0)`或者`arr(1)`，这个看个人需要了
+
+4. 实用技巧
+
+    1. 调用外部程序时使用相对路径
+
+        在用上面提到的三种方法调用外部文件时，都需要指明程序的绝对路径，否则是找不到的，
+        但是我们一般希望，这个程序就是Excel文件放在一起，最好是可以用相对路径来引用。这
+        时候需要用到ThisWorkBook.Path这个变量，这里保存的就是Excel文件所在的目录，所以，
+        我们可以用`Shell ThisWorkBook.Path & "\foo.exe"`来调用当前文件夹的foo.exe文件。
+
+    1. 调用外部dll时使用相对路径
+
+        还上面同样的问题，调用dll的时候，也需要指明绝对路径，这个也是很不方便，因为dll的
+        位置是在声明的时候就要指定，那里用不了`ThisWorkBook.Path`，所以要用另外一个方法，
+        首先双击左边的ThisWorkBook节点，右边会打开另外一个代码窗口。然后添加以下函数
+
+            Private Sub Workbook_Open()
+              Dim drv as String
+              Dim path as String
+              path = ThisWorkbook.Path
+              drv = Left(path, 3)
+              ChDrive drv
+              ChDir path
+            End Sub
+
+        这个函数在打开Excel的时候，会被自动执行，他的功能就是把当前目录切换到当前的文件
+        夹，这样直接给出dll的名字的时候，就会在当前文件夹找到匹配的dll文件
+
+    1. 有个叫QuickView的工具，在Win2000前系统有自带，但是现在没有了，不过网上很
+    容易可以找到XP能用的版本。这个工具，把dll文件直接拖进去，可以看到里面的导出函数
+    这样在写dll的时候，就可以看看导出是否正确了，类似的工具应该还有不少
+
+    1. VBA的函数，有一种数据类型是Range，可以用来接受一个范围的单元格，然后用其
+    `Cells(i, j).Value`，可以获得其中的单元格数据，用来计算
+
+{% endraw %}
+{# vim: ft=markdown
+#}

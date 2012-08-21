@@ -1,89 +1,133 @@
-=Django 安装及使用=
+---
+title: Django 安装及使用
+description: Django 安装及使用
+created: !!timestamp '2012-02-26 19:50:53'
+tags:
+    - django
+    - python
+---
 
-[Windows下的安装]
-下载：
-Python: www.python.org
-Django: https://www.djangoproject.com/download/
-Apache: www.apache.org这个是官网，
-        下载镜像列表在：http://www.apache.org/dyn/closer.cgi
+{% raw %}
+
+## Windows下的安装
+
+### 下载：
+
+* Python: <http://www.python.org>  
+* Django: <https://www.djangoproject.com/download/>  
+* Apache: <http://www.apache.org>这个是官网，
+        下载镜像列表在：<http://www.apache.org/dyn/closer.cgi>
         一般选那个推荐的镜像，然后是一个FTP列表，找到httpd里面的win32
         然后下载需要的版本即可
-MySQL-python：官网：http://sourceforge.net/projects/mysql-python/
+* MySQL-python：官网：<http://sourceforge.net/projects/mysql-python/>
               但是没有对应于pyhton2.7的发布，可以到：
-              http://www.lfd.uci.edu/~gohlke/pythonlibs/#mysql-python下载
-MySQL：http://www.mysql.com/downloads/installer/
-mod_wsgi：http://code.google.com/p/modwsgi/wiki/DownloadTheSoftware?tm=2
-安装Django：
+              <http://www.lfd.uci.edu/~gohlke/pythonlibs/#mysql-python>下载
+* MySQL：<http://www.mysql.com/downloads/installer/>  
+* mod_wsgi：<http://code.google.com/p/modwsgi/wiki/DownloadTheSoftware?tm=2>  
+
+### 安装Django：
+
 解压后，运行
-python setup.py install
+
+    python setup.py install
+
 安装后，运行python命令，然后可以
->>> import django
->>> django.VERSION
+
+    >>> import django
+    >>> django.VERSION
+
 如果看到版本号，说明安装成功
+
 把安装目录下（比如：D:\Python27\lib\site-packages\django）下面的bin文件夹
 加入系统的path变量，这样以后使用其中的django-admin.py命令时，才不需要打路径
-安装Apache：
+
+### 安装Apache：
+
 直接运行下载下来的exe文件
+
 安装后，用浏览器访问127.0.0.1，如果看到“It works！”说明安装成功
 
-[第一个项目]
+## 第一个项目
+
 1. 随便找一个文件夹，用命令行执行：
-django-admin.py startproject mysite
-这样会生成mysite目录，里面有四个文件：
-__init__.py 空文件，用来告诉python这个文件夹可以作为一个package
-settings.py 里面是一些设置，暂时不用管
-urls.py     url对应设置，暂时也不用管
-manage.py   一个纯python的Web Server，用于快速开发，因为我们有了apache，所以不管
+
+        django-admin.py startproject mysite
+
+    这样会生成mysite目录，里面有四个文件：
+
+    \_\_init\_\_.py 空文件，用来告诉python这个文件夹可以作为一个package  
+    settings.py 里面是一些设置，暂时不用管  
+    urls.py     url对应设置，暂时也不用管  
+    manage.py   一个纯python的Web Server，用于快速开发，因为我们有了apache，所以不管  
+
 2. 在这个文件夹中，新建两个文件，内容如下：
-假设刚才创建的文件夹在：C:\django_test\mysite\
--------------------------apache.conf--------------------------
-#这是apache配置的一部分，在apache的httpd.conf最后，要加上一句（不含前面的#号）
-#Include "C:/django_test/mysite/apache.conf"
-#修改此文件后，需要重启apache服务
 
-#把网站的访问导向mysite.wsgi文件，后面的事情就让django接管了
-WSGIScriptAlias / "C:/django_test/mysite/mysite.wsgi"
-#设定访问权限，这个项目比较简单，开放所有权限即可，实际的项目需要很小心的配置
-#这是属于apache的管辖范围，相关资料要查阅apache的配置文件写法
-<Directory "C:/django_test/mysite">
-Allow from all
-</Directory>
---------------------------------------------------------------
--------------------------mysite.wsgi--------------------------
-import os, sys
-#这个路径会是C:\django_test\mysite，没什么用
-setting_path = os.path.dirname(__file__)
-#这个路径会是C:\django_test，后面一句把它加入path环境变量
-#这样django才能找到需要的文件
-project_path = os.path.dirname(setting_path)
-sys.path.append(project_path)
+    假设刚才创建的文件夹在：C:\django_test\mysite\
 
-#这句必须有，指定配置文件的位置，因为上面把C:\django_test加入path环境变量
-#所以这里是mysite.settings，如果上面把C:\django_test\mysite加入path，
-#那么这里就写settings
-os.environ['DJANGO_SETTINGS_MODULE'] = 'mysite.settings'
-#启动django，开始显示网页
-import django.core.handlers.wsgi
-application = django.core.handlers.wsgi.WSGIHandler()
---------------------------------------------------------------
-现在，访问http://127.0.0.1/，如无意外，应可以看到一个“It worked!”页面
-当然，如果出现意外，那也是正常的，调试的技巧参考"[调试技巧]"小节
+    文件名: apache.conf
 
-[调试技巧]
-1 无敌的print
-据称，无论任何语言编写的程序，只要能输出调试语句，那么90%以上的问题都可以解决
-在python+django+apache的环境下，可以利用apache的错误日志来辅助调试
-在任何可以执行到的代码中，使用：
-print >> sys.stderr, "this is debug info"
-就可以在apache的错误日志中找到该行输出。apache的错误日志可以通过httpd.conf配置，
-默认的位置在安装目录下的logs\error.log
-2 利用出错页面
-django默认是开启调试模式的，如果代码出现异常，会出现一个包含丰富调试信息的页面，
-这个页面包括了错误的位置，调用堆栈，还有当前局部变量的值，所以，有时候我们可以
-自己引发一个错误，然后到错误页面查看需要的信息，和打断点差不多，不过就是不能继续
-执行
-引发错误的方法有很多，使用assert算是比较方便的，在需要停止的地方，加入：
-assert False
-然后就去分析错误页面的数据吧
+        #这是apache配置的一部分，在apache的httpd.conf最后，要加上一句（不含前面的#号）
+        #Include "C:/django_test/mysite/apache.conf"
+        #修改此文件后，需要重启apache服务
 
-vim: ft=mynotes
+        #把网站的访问导向mysite.wsgi文件，后面的事情就让django接管了
+        WSGIScriptAlias / "C:/django_test/mysite/mysite.wsgi"
+        #设定访问权限，这个项目比较简单，开放所有权限即可，实际的项目需要很小心的配置
+        #这是属于apache的管辖范围，相关资料要查阅apache的配置文件写法
+        <Directory "C:/django_test/mysite">
+        Allow from all
+        </Directory>
+
+    文件名: mysite.wsgi
+
+        import os, sys
+        #这个路径会是C:\django_test\mysite，没什么用
+        setting_path = os.path.dirname(__file__)
+        #这个路径会是C:\django_test，后面一句把它加入path环境变量
+        #这样django才能找到需要的文件
+        project_path = os.path.dirname(setting_path)
+        sys.path.append(project_path)
+
+        #这句必须有，指定配置文件的位置，因为上面把C:\django_test加入path环境变量
+        #所以这里是mysite.settings，如果上面把C:\django_test\mysite加入path，
+        #那么这里就写settings
+        os.environ['DJANGO_SETTINGS_MODULE'] = 'mysite.settings'
+        #启动django，开始显示网页
+        import django.core.handlers.wsgi
+        application = django.core.handlers.wsgi.WSGIHandler()
+
+    现在，访问<http://127.0.0.1/>，如无意外，应可以看到一个“It worked!”页面
+
+    当然，如果出现意外，那也是正常的，调试的技巧参考"[调试技巧]"小节
+
+## 调试技巧
+
+1. 无敌的print
+
+    据称，无论任何语言编写的程序，只要能输出调试语句，那么90%以上的问题都可以解决
+
+    在python+django+apache的环境下，可以利用apache的错误日志来辅助调试
+
+    在任何可以执行到的代码中，使用：
+
+        print >> sys.stderr, "this is debug info"
+
+    就可以在apache的错误日志中找到该行输出。apache的错误日志可以通过httpd.conf配置，
+    默认的位置在安装目录下的logs\error.log
+
+2. 利用出错页面
+
+    django默认是开启调试模式的，如果代码出现异常，会出现一个包含丰富调试信息的页面，
+    这个页面包括了错误的位置，调用堆栈，还有当前局部变量的值，所以，有时候我们可以
+    自己引发一个错误，然后到错误页面查看需要的信息，和打断点差不多，不过就是不能继续
+    执行
+
+    引发错误的方法有很多，使用assert算是比较方便的，在需要停止的地方，加入：
+
+        assert False
+
+    然后就去分析错误页面的数据吧
+
+{% endraw %}
+{# vim: ft=markdown
+#}
