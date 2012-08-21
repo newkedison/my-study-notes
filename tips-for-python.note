@@ -1,127 +1,219 @@
-=Python小知识=
+---
+title: Python小知识
+description: >
+    学习Python过程中, 一些小知识点的记录
+created: !!timestamp '2011-12-07 15:13:40'
+tags:
+    - python
+    - tips
+---
 
-abstract:学习Python过程中,一些小知识点的记录
-tag:Python tips
+{% raw %}
 
-1. type(10) == types.IntType 与 type(10) is types.IntType
-这两句的结果是一致的,但是思路不同
-首先要明确,type的返回值是一个"类型"(也可以说是"类",因为从Python2.2开始,这两者已经统一了),types.IntType也是一个"类型"
-其次,两个类型在比较,如果用==,那么比较的是类型的值,如果用is,比较的是是否指向同一个对象.可以这么理解,如果用==,是对整个类进行比较,如果用is,是比较地址是否相等.显而易见,比较地址的效率肯定是高的(另: X is Y等价于id(X)==id(Y))
-再次,因为type的返回值都是类型(类型的__name__就叫type),这种类型总共就那么几个值,这些值都是types这个模块里面.用一个小实验(id(type(10)==id(types.IntType)的结果为True),就可以看出,实际上type返回值,就是types模块中几个类型的引用.
-那么,就可以用is直接判断type的返回值,这样的效率比==要高一些
+1. `type(10) == types.IntType` 与 `type(10) is types.IntType`
 
-2. enumerate()这个函数在for循环中很好用
-a=(1, 22, 333, 444)
-for i, value in enumerate(a)
-    print '(%d)%d' % i % value
-这样在循环中,可以同时取出数值和序号,不用自己定义一个变量,用来算序号
+    这两句的结果是一致的, 但是思路不同
 
-3. 调试wxPython程序时,由于错误信息已经给重定向了,导致代码有错误时,会一闪而过,解决的方法,就是在定义App实例时,设置参数redirect=True,这样就能看到错误提示了.注意,如果继承了wx.App,那么是在调用父类的__init__中设置这个参数.
-另外,在Windows中,redirect的默认值是True,而在Linux/Unit中,默认值是False,所以最好手动赋值一下,以免换平台时出错
+    首先要明确, `type`的返回值是一个"类型"(也可以说是"类", 因为从Python2.2开始, 
+    这两者已经统一了), `types.IntType`也是一个"类型"
 
-4. 继承一个类之后,如果不重定义__init__函数,那么父类的__init__会被自动调用,如果重定义了__init__,那么一定要记得在这个函数里面调用父类的__init__,因为Python不像C++,他不会再自动调用父类的__init__.
+    其次, 两个类型在比较, 如果用==, 那么比较的是类型的值, 如果用`is`, 
+    比较的是是否指向同一个对象.可以这么理解, 如果用==, 是对整个类进行比较, 
+    如果用`is`, 是比较地址是否相等.显而易见, 比较地址的效率肯定是高的
+    (另: `X is Y`等价于`id(X)==id(Y)`)
 
-5 判断一个变量是否已经定义，有三种方法
-第一种方法：
-'var' in locals().keys()
-第二种方法：
-try: 
-  print var
-except NameError: 
-  print 'var not defined'
-第三种方法：
-'var' in dir()
+    再次, 因为`type`的返回值都是类型(类型的`__name__`就叫`type`), 
+    这种类型总共就那么几个值, 这些值都是`types`这个模块里面.
+    用一个小实验(`id(type(10)==id(types.IntType)`的结果为True), 就可以看出, 
+    实际上`type`返回值, 就是`types`模块中几个类型的引用.
 
-7 关于PEP8
-PEP8是有关Python编程风格的一个推荐标准，详细的内容在网上很容易找到，官方还提供了测试工具，通过以下命令安装
-$ sudo easy_install pep8
-安装完成后，要测试一个文件是否符合PEP8，可以用以下命令
-$ pep8 --show-source --show-pep8 --statistics --count --benchmark filename.py
-看pep8 -h的介绍，可以很容易清楚上面那些参数是什么意思，另外还有一个--ignore的参数，可以指定忽略哪些错误，比如我一般加上--ignore=E111，忽略要求缩进4个空格，因为我习惯于缩进2个空格
+    那么, 就可以用`is`直接判断`type`的返回值, 这样的效率比==要高一些
 
-8 super()的用法
-super函数是用来让子类调用父类的同名方法的，在V2.2版本以前，要调用父类的方法，必须要写父类的类名，比如
-----------------Python---------------------
-class A:
-  def aaa(self):
-    pass
-class B(A):
-  def aaa(self):
-    A.aaa(self)
--------------------------------------------
-这样有个缺点，万一基类要改名字的话，子类的代码也需要修改，如果有很多个子类，这将是一个麻烦且容易出错的事情，于是，在V2.2版本，增加了super函数，现在可以这么写
-----------------Python---------------------
-class A(object):
-  def aaa(self):
-    pass
-class B(A):
-  def aaa(self):
-    super(B, self).aaa()
--------------------------------------------
-注意到，A的定义有一点不同，A要继承自object才行，如果不这样继承，运行到super这里会报错。这是因为，还是在以前，python的类经过一次升级，如果没有继承自object，认为是old-style，而继承的是new-style，只有new-style才支持这种super的用法。
-另外，在单继承的时候，上面两种方法都可以正常使用，但是在多继承的时候，一般要用super。当然，最好的选择是不使用多继承
+2. `enumerate()`这个函数在for循环中很好用
 
-9 关于字符编码
-“TODO：关于文件编码，字符串编码，编码转换方面的内容暂时不需要太关心，不花时间，先占个位置”
-在代码中如果出现了中文，那么必须要文件的“第一或第二行”指明encoding，否则运行会出错，不仅是代码，就算注释有中文，也必须写，格式是：
-# coding=utf-8
-# -*- coding: utf-8 -*-
-# vim: set fileencoding=utf-8
-这三种语法都行，后两种是顺便可以给其他编辑器看
-另外，utf-8可能有BOM的存在，似乎这个问题python编译器会自己解决。
+        a=(1, 22, 333, 444)
+        for i, value in enumerate(a)
+            print '(%d)%d' % i % value
 
-10 python文件开头的/usr/bin/env python
-写过shell脚本的都知道，在开头写上
-#!/bin/bash
-可以使得脚本可以直接被执行，python文件要直接被执行，也可以用这种办法，只要python文件的第一行写：
-#!/usr/bin/python
-但是，有一个小问题，就是每个人安装python的时候，不一定会采用默认的安装位置，也就是说，/usr/bin/python这个文件不一定存在。所以前面那种方法不太可靠。
-而借助env命令，则可以不管代码文件所在位置，只要在PATH里面，就能被找到。当然，也存在env命令的位置不正确的可能，但是一般来说，env命令是和系统一起安装的，很少会改变安装位置（和bash一样），而python一般都是用户自己安装的，所以安装位置可能会不同。也就是说，env命令改变位置的可能性存在，但是比python命令改变位置的可能性小的多。
-所以，一般python文件的第一行写的就是
-#!/usr/bin/env python
-还有另外一种方法，使用subshell的方法，也可以自动去PATH里面搜索python的位置，但是subshell比较浪费资源，不到万不得已，还是少用为好。
+    这样在循环中, 可以同时取出数值和序号, 不用自己定义一个变量, 用来算序号
 
-11 删除和重新加载指定模块
-验证模块是否已加载
-import sys
-if 'sys' in sys.modules:
-  print 'sys in modules'
-if 'foo' in sys.modules:
-  print 'foo in modules'
-删除模块(经测试,这里可以删除sys.modules里面的信息，但是模块还是没有被删除)
-import sys
-if 'ModuleName' in sys.modules:
-  del(sys.modules['ModuleName'])
-重新加载模块(可实现守护程序在某个模块更新后，自动加载这个模块)
-import foo
-foo = reload(foo)
+3. 调试wxPython程序时, 由于错误信息已经给重定向了, 导致代码有错误时, 会一闪而过,
+解决的方法, 就是在定义App实例时, 设置参数`redirect=True`, 这样就能看到错误提示了.
+注意, 如果继承了wx.App, 那么是在调用父类的`__init__`中设置这个参数.
 
-12 函数参数的传递
-最一般的做法，调用是必须给足3个参数，而且顺序不能修改
-def foo(a, b, c)
+    另外, 在Windows中, `redirect`的默认值是True, 而在Linux/Unit中, 默认值是False, 
+    所以最好手动赋值一下, 以免换平台时出错
 
-可以提供默认值，这时就可以用foo(b=1, c=2, a='a')来调用了
-def foo(a, b, c=1)
+4. 继承一个类之后, 如果不重定义`__init__`函数, 那么父类的`__init__`会被自动调用,
+如果重定义了`__init__`, 那么一定要记得在这个函数里面调用父类的`__init__`, 
+因为Python不像C++, 他不会再自动调用父类的`__init__`.
 
-如果参数个数不定，可以在参数前面加个*，则后面所有的参数，作为一个tuple传入
-def foo(a, *b)
-比如上面的函数，如果用
-foo(1, 2) 则a=1, b=(2,)
-foo(1) 则 a=1, b=()
-foo(1, 2, 3, 4) 则 a=1, b=(2, 3, 4)
+5. 判断一个变量是否已经定义，有三种方法
 
-还有一种加两个*的，表示可以接受一个字典，比如
-def foo(**a)
-则可以这么调用
-foo(a=1, b=3, c=5), 则a的值为{a:1, b:3, c:5}
-注意这里虽然调用的时候，出现给a的赋值，和形参的名字一样，但这只会作为字典的一个元素而已
+    * 第一种方法：
 
-结合以上几种方法，定义
-foo(a, b=2, *c, **d),则下面的调用所传递的参数如后面所示
-foo(1)                        a=1, b=2, c=(), d={}
-foo(1, 3)                     a=1, b=3, c=(), d={}
-foo(1, 2, 3)                  a=1, b=2, c=(3,) d={}
-foo(x=2, b='0', d='', a=-1)   a=-1, b='0', c=(), d={'x':2, 'd': ''}
-foo(1, 2, d=None, 5) 错误，有等号的参数后面不能再有没有等号的参数
+        'var' in locals().keys()
 
-vim: ft=mynotes
+    * 第二种方法：
+
+        try: 
+          print var
+        except NameError: 
+          print 'var not defined'
+
+    * 第三种方法：
+
+        'var' in dir()
+
+7. 关于PEP8
+
+    PEP8是有关Python编程风格的一个推荐标准，详细的内容在网上很容易找到，
+    官方还提供了测试工具，通过以下命令安装
+
+        $ sudo easy_install pep8
+
+    安装完成后，要测试一个文件是否符合PEP8，可以用以下命令
+
+        $ pep8 --show-source --show-pep8 --statistics --count --benchmark filename.py
+
+    看pep8 -h的介绍，可以很容易清楚上面那些参数是什么意思，
+    另外还有一个--ignore的参数，可以指定忽略哪些错误，比如我一般加上--ignore=E111，
+    忽略要求缩进4个空格，因为我习惯于缩进2个空格
+
+8. super()的用法
+
+    super函数是用来让子类调用父类的同名方法的，在V2.2版本以前，要调用父类的方法，
+    必须要写父类的类名，比如
+
+        class A:
+          def aaa(self):
+            pass
+        class B(A):
+          def aaa(self):
+            A.aaa(self)
+
+    这样有个缺点，万一基类要改名字的话，子类的代码也需要修改，如果有很多个子类，
+    这将是一个麻烦且容易出错的事情，于是，在V2.2版本，增加了super函数，
+    现在可以这么写
+
+        class A(object):
+          def aaa(self):
+            pass
+        class B(A):
+          def aaa(self):
+            super(B, self).aaa()
+
+    注意到，A的定义有一点不同，A要继承自object才行，如果不这样继承，
+    运行到super这里会报错。这是因为，还是在以前，python的类经过一次升级，
+    如果没有继承自object，认为是old-style，而继承的是new-style，
+    只有new-style才支持这种super的用法。
+
+    另外，在单继承的时候，上面两种方法都可以正常使用，但是在多继承的时候，
+    一般要用super。当然，最好的选择是不使用多继承
+
+9. 关于字符编码
+
+    在代码中如果出现了中文，那么必须要文件的**第一或第二行**指明encoding，
+    否则运行会出错，不仅是代码，就算注释有中文，也必须写，格式是：
+
+        # coding=utf-8
+        # -*- coding: utf-8 -*-
+        # vim: set fileencoding=utf-8
+
+    这三种语法都行，后两种是顺便可以给其他编辑器看
+    另外，utf-8可能有BOM的存在，似乎这个问题python编译器会自己解决。
+
+10. python文件开头的`/usr/bin/env python`
+
+    写过shell脚本的都知道，在开头写上
+
+        #!/bin/bash
+
+    可以使得脚本可以直接被执行，python文件要直接被执行，也可以用这种办法，
+    只要python文件的第一行写：
+
+        #!/usr/bin/python
+
+    但是，有一个小问题，就是每个人安装python的时候，不一定会采用默认的安装位置，
+    也就是说，/usr/bin/python这个文件不一定存在。所以前面那种方法不太可靠。
+
+    而借助env命令，则可以不管代码文件所在位置，只要在PATH里面，就能被找到。
+    当然，也存在env命令的位置不正确的可能，但是一般来说，env命令是和系统一起安装的，
+    很少会改变安装位置（和bash一样），而python一般都是用户自己安装的，
+    所以安装位置可能会不同。也就是说，env命令改变位置的可能性存在，
+    但是比python命令改变位置的可能性小的多。
+
+    所以，一般python文件的第一行写的就是
+
+        #!/usr/bin/env python
+
+    还有另外一种方法，使用subshell的方法，也可以自动去PATH里面搜索python的位置，
+    但是subshell比较浪费资源，不到万不得已，还是少用为好。
+
+11. 删除和重新加载指定模块
+
+    验证模块是否已加载
+
+        import sys
+        if 'sys' in sys.modules:
+          print 'sys in modules'
+        if 'foo' in sys.modules:
+          print 'foo in modules'
+
+    删除模块(经测试, 这里可以删除sys.modules里面的信息，但是模块还是没有被删除)
+
+        import sys
+        if 'ModuleName' in sys.modules:
+          del(sys.modules['ModuleName'])
+
+    重新加载模块(可实现守护程序在某个模块更新后，自动加载这个模块)
+
+        import foo
+        foo = reload(foo)
+
+12. 函数参数的传递
+
+    最一般的做法，调用是必须给足3个参数，而且顺序不能修改
+
+        def foo(a, b, c)
+
+    可以提供默认值，这时就可以用foo(b=1, c=2, a='a')来调用了
+
+        def foo(a, b, c=1)
+
+    如果参数个数不定，可以在参数前面加个\*，则后面所有的参数，作为一个tuple传入
+
+        def foo(a, *b)
+
+    比如上面的函数，如果用
+
+        foo(1, 2) 则a=1, b=(2, )
+        foo(1) 则 a=1, b=()
+        foo(1, 2, 3, 4) 则 a=1, b=(2, 3, 4)
+
+    还有一种加两个\*的，表示可以接受一个字典，比如
+
+        def foo(**a)
+
+    则可以这么调用
+
+        foo(a=1, b=3, c=5), 则a的值为{a:1, b:3, c:5}
+
+    注意这里虽然调用的时候，出现给a的赋值，和形参的名字一样，
+    但这只会作为字典的一个元素而已
+
+    结合以上几种方法，定义
+
+    `foo(a, b=2, *c, **d)`, 则下面的调用所传递的参数如后面所示
+
+        foo(1)                        a=1, b=2, c=(), d={}
+        foo(1, 3)                     a=1, b=3, c=(), d={}
+        foo(1, 2, 3)                  a=1, b=2, c=(3, ) d={}
+        foo(x=2, b='0', d='', a=-1)   a=-1, b='0', c=(), d={'x':2, 'd': ''}
+        foo(1, 2, d=None, 5) 错误，有等号的参数后面不能再有没有等号的参数
+
+{% endraw %}
+
+{#
+vim: ft=markdown
+#}
