@@ -1,132 +1,195 @@
-=Bash常用命令=
-
-abstract: some useful bash commands which I have used, not only command,
+---
+title: Bash常用命令
+description: some useful bash commands which I have used, not only command, >
           but also some useful operator
-tag: bash shell command
+created: !!timestamp '2012-01-14 18:18:15'
+tags:
+    - bash
+    - shell
+    - command
+---
 
+{% raw %}
 
-[带进度条复制文件]
-$ rsync -av --progress ~/Source ~/Dest
+## 带进度条复制文件
 
-[查看剩余空间]
-$ df
+    $ rsync -av --progress ~/Source ~/Dest
 
-[挂载Windows共享文件夹]
-$ mount -t cifs -o username=username,password="password" //192.168.18.88/ShareFolderName /mnt/winshare 
+## 查看剩余空间
+
+    $ df
+
+## 挂载Windows共享文件夹
+
+    $ mount -t cifs -o username=username,password="password" //192.168.18.88/ShareFolderName /mnt/winshare 
+
 注意：
-1、-t cifs制定挂载后等格式，据说这种格式效率比较高
-2、-o后面跟等设置，用都好分隔，用username制定登录用户名，用password制定密码，这个password记得用双引号，这样才能写特殊字符，password也可以不写，等会会提示输入。后面跟着等是远程路径，记得要写共享文件夹等名字，不然会出错的，最后一个参数就是挂载点
 
-[查看远程Windows主机共享了什么]
-$ smbclient -L //192.168.18.88 -U username
--U后面跟用户名，回车后会要求输入密码 
+1. `-t cifs`制定挂载后等格式，据说这种格式效率比较高
+2. `-o`后面跟等设置，用都好分隔，用username制定登录用户名，用password制定密码，这个password记得用双引号，这样才能写特殊字符，password也可以不写，等会会提示输入。后面跟着等是远程路径，记得要写共享文件夹等名字，不然会出错的，最后一个参数就是挂载点
 
-[将当前文件夹下,所有文件中的common.h替换成Common.h]
-$ grep 'common.h' *|awk -F: '{print $1}'|xargs sed -i '/common.h/s//Common.h/'
+## 查看远程Windows主机共享了什么
 
-[当前文件夹下的文件权限全部改为644]
-$ find . -type f -exec chmod 644 {} \;
+    $ smbclient -L //192.168.18.88 -U username
 
-[查看所有TCP链接]
-$ netstat -npa --tcp
--n表示不解析端口名,比如不加-n时显示端口是FTP,加上-n后显示的就直接是端口号21,这个参数最好加上去,否则解析端口可能要占用很长的时间,而这几乎是没任何必要的,-p要求显示进程名,方便用grep找出需要的链接,-a表示显示所有socket,如果不加上,只会显示已建立的链接,不会显示在监听的链接
+`-U`后面跟用户名，回车后会要求输入密码 
 
-[VMWare切换到终端]
+## 将当前文件夹下,所有文件中的common.h替换成Common.h
+
+    $ grep 'common.h' *|awk -F: '{print $1}'|xargs sed -i '/common.h/s//Common.h/'
+
+## 当前文件夹下的文件权限全部改为644
+
+    $ find . -type f -exec chmod 644 {} \;
+
+## 查看所有TCP链接
+
+    $ netstat -npa --tcp
+
+`-n`表示不解析端口名,比如不加`-n`时显示端口是FTP,加上`-n`后显示的就直接是端口号21,这个参数最好加上去,否则解析端口可能要占用很长的时间,而这几乎是没任何必要的,`-p`要求显示进程名,方便用`grep`找出需要的链接,`-a`表示显示所有socket,如果不加上,只会显示已建立的链接,不会显示在监听的链接
+
+## VMWare切换到终端
+
 从XWindow进入终端模式,本来是按Ctrl+Alt+Fn的,但是Ctrl+Alt是VMWare的快捷键,一种方法是修改VMWare的快捷键,另一种方法是先按住Ctrl和Fn,然后再按Alt
 另外,从终端模式返回XWindow时按Alt+F7即可
 
-[获取当前runlevel]
-$ runlevel | tail -c 2
-runlevel命令显示上一次和本次运行等级,显示格式如"a b",如果要获取当前运行等级,那么用tail命令,-c参数表示获取最后N个字节,虽然我们只需要最后一个数字,但是参数要写2,可能是连结束符(或者换行符)也算上去了吧
+## 获取当前runlevel
 
-[查看系统日志]
-$ tail -f /var/log/syslog
+    $ runlevel | tail -c 2
+
+`runlevel`命令显示上一次和本次运行等级,显示格式如"a b",如果要获取当前运行等级,那么用`tail`命令,`-c`参数表示获取最后N个字节,虽然我们只需要最后一个数字,但是参数要写2,可能是连结束符(或者换行符)也算上去了吧
+
+## 查看系统日志
+
+    $ tail -f /var/log/syslog
+
 查看系统日志文件的最后10行,而且程序不退出,一旦系统日志文件有更新,会追加显示,这样就可以用来监视系统日志了,当然,后面的文件名是任意的,也就是可以监视任意文件的变化
 
-[find不递归以及多条件]
-$ find . -maxdepth 1 -type f \( -name "2*" -or -name "3*" \) -exec echo {} \;
+## find不递归以及多条件
+
+    $ find . -maxdepth 1 -type f \( -name "2*" -or -name "3*" \) -exec echo {} \;
+
 在当前文件夹下面搜索以2或者3开头的文件,并显示出来
--maxdepth 1 使得find只在当前目录下查找,不深入文件夹,find在默认情况下,是递归搜索所有子文件夹的.注意这个选项要凡在-type前面,放在后面虽然也没问题,但是会有一个报警.
--type f 指定只搜索文件,不管文件夹的名字是不是符合要求都忽略
-后面用\(和\)括起来的是指定文件名,中间用一个-or把两个条件"或"起来,注意要加上括号,但是括号前面要用反斜杠转义
-最后执行一个echo命令,其实用-print也是可以的
+`-maxdepth 1` 使得find只在当前目录下查找,不深入文件夹,find在默认情况下,是递归搜索所有子文件夹的.注意这个选项要放在`-type`前面,放在后面虽然也没问题,但是会有一个报警.
+`-type f` 指定只搜索文件,不管文件夹的名字是不是符合要求都忽略
+后面用`\(`和`\)`括起来的是指定文件名,中间用一个`-or`把两个条件"或"起来,注意要加上括号,但是括号前面要用反斜杠转义
+最后执行一个echo命令,其实用`-print`也是可以的
 
-[通过ssh拷贝远程Linux主机上的文件和文件夹]
-$ scp -p <login_name@hostname>:/dir/for/file localdir/to/filelocation
-其中-p表示保留文件原来的修改时间， <login_name@hostname>类似于newk@192.168.18.100，然后加上一个冒号再加上远程文件名，只要这个用户可以访问的文件，都可以复制，后面一个参数就是本地文件名
-如果加上-r参数，表示递归处理文件夹，不加上的话，所有文件夹将直接忽略
+## 通过ssh拷贝远程Linux主机上的文件和文件夹
 
-[关于全局菜单栏上面的按钮会莫名其妙的丢失]
+    $ scp -p <login_name@hostname>:/dir/for/file localdir/to/filelocation
+
+其中`-p`表示保留文件原来的修改时间， `<login_name@hostname>`类似于newk@192.168.18.100，然后加上一个冒号再加上远程文件名，只要这个用户可以访问的文件，都可以复制，后面一个参数就是本地文件名
+如果加上`-r`参数，表示递归处理文件夹，不加上的话，所有文件夹将直接忽略
+
+## 关于全局菜单栏上面的按钮会莫名其妙的丢失
+
 先安装一个配置工具
-$ sudo apt-get install dconf-tools
+
+    $ sudo apt-get install dconf-tools
+
 然后运行
-$ dconf-editor
+
+    $ dconf-editor
+
 在弹出的“Configuration Editor”窗口中，依次点击左侧展开“desktop”>“unity”，点击选择“panel”（一定要点击一下，右边才有显示）
 在右边Name下列出的“systray-whitelist”项目中，点击Value下的值，改为'all'即可
 
-[修改启动时启动的服务]
+## 修改启动时启动的服务
+
 下载rcconf
-$ sudo apt-get install rcconf
+
+    $ sudo apt-get install rcconf
+
 然后用sudo执行rcconf，可以看到配置界面，用方向键移动光标，用空格切换选中，用tab跳到确定
 
-[查看当前进程]
-$ ps auxf
+## 查看当前进程
+
+    $ ps auxf
+
 可以加上grep筛选出关注的进程
 
-[grep常用参数]
--m 1 
-在一个文件中，最多匹配一次，然后找下一个文件
--A 2
-找到匹配后，除了显示匹配行，再显示该行前面的两行
--B 2
-找到匹配后，除了显示匹配行，再显示该行后面的两行
--I
-忽略二进制文件
--r
-递归搜索所有子文件夹
+## grep常用参数
 
-[Shell脚本判断是否是被source]
-类似于python的if __name__ == "__main__":，bash可以实现类似的功能，如下：
--------------------Shell-----------------------------
-if [[ "$BASH_SOURCE" == "$0" ]]; then
+* -m 1 
+
+    在一个文件中，最多匹配一次，然后找下一个文件
+
+* -A 2
+
+    找到匹配后，除了显示匹配行，再显示该行前面的两行
+
+* -B 2
+
+    找到匹配后，除了显示匹配行，再显示该行后面的两行
+
+* -I
+
+    忽略二进制文件
+
+* -r
+
+    递归搜索所有子文件夹
+
+## Shell脚本判断是否是被source
+
+类似于python的if \_\_name\_\_ == "\_\_main\_\_":，bash可以实现类似的功能，如下：
+
+<pre><code> if [<b></b>[ "$BASH_SOURCE" == "$0" ]]; then
   main
 fi
------------------------------------------------------
+</code></pre>
 
-[产生随机数]
+## 产生随机数
+
 在Linux里面，有两个特殊的设备/dev/random和/dev/urandom，可以用于产生随机数，可以
 使用以下命令测试：
-$ od -vAn -N16 -w4 -tu4 < /dev/random
+
+    $ od -vAn -N16 -w4 -tu4 < /dev/random
+
 先解释下od这个很好用的命令，这个命令是从文件读取指定长度的字节，然后按照一定的
 规则，组合成数字进行输出，这在对付二进制文件的时候，非常的有用
--v这个参数我没测试出来作用，-An表示不要打印地址，如果是-Ax就是用十六进制打印地址
-这样在输出结果前面就会多出来一列地址。
--N16表示只读取16个字节
--w4表示每4个字节作为一组，显示在一行
--t是决定按照什么格式来输出，-tu4表示4字节的无符号整型，其他的格式参照man
+
+* `-v`这个参数我没测试出来作用，`-An`表示不要打印地址，如果是`-Ax`就是用十六进制
+打印地址 这样在输出结果前面就会多出来一列地址。
+* `-N16`表示只读取16个字节
+* `-w4`表示每4个字节作为一组，显示在一行
+* `-t`是决定按照什么格式来输出，`-tu4`表示4字节的无符号整型，其他的格式参照man
+
 上面的命令，就是从/dev/random读取16个字节，每4个字节1行，每4个字节组合成无符号
 整型，然后输出
+
 从结果可以看到，生成了4个随机整数，但是，如果多次运行这个命令，可能会出现阻塞的
 现象，这个时候，随便在键盘上乱按一些字符，就可以继续输出了。
+
 会出现阻塞的原因，是因为/dev/random是一个真正的随机数产生器，它的工作原理，是
 不停的搜集系统内核中的环境噪声（其实就是按照一定的方法，从一些中断中获取随机信息
 这些信息是随机产生的），然后在我们读取它的时候，就从它收集的信息中返回给我们随机
 的字节，如果它没有收集到足够的信息，那么读取的时候就会发生阻塞，这时候我们从键盘
 输入随机内容，其实就是产生了一些随机的环境噪声给它，这样它就能继续输出了。
+
 所以，/dev/random是一个真正的随机数产生器，与之相对应的，还有一个/dev/urandom
 这个也可以产生随机数，但是在环境噪声不够的时候，不会阻塞，而是继续产生伪随机数
 这样可以避免阻塞浪费大量的时间
+
 从使用场合来看，/dev/random适用于那些对安全性要求比较高的场合，而/dev/urandom在
 平时的使用中，已经足够满足我们的使用需求了，至少比直接用时间作为随机种子要更加
 随机一些。
+
 另外，如果在C程序中，就不要再用srand了，应该是先用fopen打开/dev/urandom，然后
 fread需要的字节数直接到一个整型变量中，后面就可以根据需要获得指定范围内的随机数
 最后别忘了fclose
 
-[pstree命令]
-这个命令用来查看一个进程的父进程，要比ps auxf命令要清晰，格式很简单
-$ pstree -p | grep bash
-这样可以查看所有含有bash的命令，已经他的父进程和子进程
--p参数表示同时列出PID，然后要kill还是要干嘛就方便了
+## pstree命令
 
-vim: ft=mynotes
+这个命令用来查看一个进程的父进程，要比ps auxf命令要清晰，格式很简单
+
+    $ pstree -p | grep bash
+
+这样可以查看所有含有bash的命令，已经他的父进程和子进程
+
+`-p`参数表示同时列出PID，然后要kill还是要干嘛就方便了
+
+{% endraw %}
+{# vim: ft=markdown
+#}
