@@ -1,0 +1,127 @@
+---
+title: 使用Hyde建立静态网站
+description: >
+  本网站是采用hyde来生成的, 这里记录一下在建立这个网站时碰到和解决的问题
+created: !!timestamp '2012-08-19 10:51:16'
+tags:
+    - hyde
+    - github
+---
+
+###### 想到什么写什么, 暂时比较混乱, 等写完再整理
+
+### hyde对jinja2的扩展
+
+hyde号称支持多种模板系统, 但是目前仅支持jinja2, 这是一种与Django模板语法很类似的
+模板系统, 这也是我选择hyde而不是JekyII的原因
+
+但是, hyde对jinja2进行了一些扩展, 导致我在看代码的时候, 碰到看不懂的地方去查
+jinja2 的文档总是找不到说明
+
+下面列举目前我知道的hyde对jinja的扩展
+
+{% raw %}
+
+#### filter(过滤器)
+* `{% content|markdow %}`
+
+    对content的内容按照markdown语法进行解析
+
+* `{% content|typogrify %}`
+
+    对content的内容进行一些"美化"(我个人不认为很美), 
+    可参考[这里](http://code.google.com/p/typogrify/)的说明
+    (还有[demo](http://static.mintchaos.com/projects/typogrify/))
+
+#### mark tag(标记)
+* `{% mark name -%}...{%- endmark %}`
+
+    这个我还不知道干嘛用的, 可能需要和下面的refer配套使用
+
+* `{% refer to XXX as YYY %}`
+
+    这个的具体用法也还没明白
+
+{% endraw %}
+
+### 替换网页模板
+
+原来的模板比较难看, 我不得不换一个模板, 自己写一个模板就比较复杂了, 但是其实原来的
+模板主要是CSS比较难看, 于是主要工作变成了换CSS.
+
+刚好前阵子稍微学习了一下bootstrap, 于是当然是换成整套的bootstrap, 在hyde的Github
+主页上, 给了一个使用bootstrap的项目(见
+[hyde-bootstrap](https://github.com/auzigog/hyde-bootstrap))
+于是我下载了压缩包, 然后把CSS和js都弄过来, 接着修改layout文件夹里面几个模板文件的
+内容, 慢慢调试(这其实就是个耐心活), 最后终于把原来的CSS丢弃, 换成了bootstrap, 看起来
+清爽多了
+
+但是, 上面的这个工程里面, 用的bootstrap版本太老, 是V1.4.0, 而bootstrap早就更新到2.0
+以上了.本来CSS这东西也没必要追求最新, 但是我发现了一个地方的CSS很难看, 就是
+`<pre><code>...</code></pre>`
+这种格式, 这是Markdown在生成代码块的时候用的格式, 在这个CSS上看起来, 文字底色是粉红
+的, 很不协调.
+
+后来找到了一个解决的[方法](https://github.com/twitter/bootstrap/issues/598), 
+测试下来也还可以
+
+然后不知道怎么搜的, 找到了<http://www.initializr.com/>这个网站, 可以生成一套基本的
+HTML5+jQuery+bootstrap的模板, 于是我就让它给我生成了模板, 然后又是慢慢搞, 把原来的
+模板替换掉.
+
+其实修改CSS就是需要耐性, 在有了强大的Chrome的Developer Tools后, 所有的CSS效果
+都是WYSIWYG, 只要调整到自己满意, 然后把代码复制下来, 写到CSS文件里面即可
+
+bootstrap从1.4到2.0, 把code的样子改好看了, 另外一个row原来是分成16份, 现在是分成12.
+还有导航栏的语法似乎也变掉了.
+
+### CSS使用心得
+
+Chrome已经内置了一个强大的网页调试工具, 无论调试js还是CSS, 无论调试本地代码还是
+观察服务器响应信息, 不论Debug还是Profile, 统统可以实现. 
+
+之前写js时, 它展现了强大的断点调试和单步调试功能, 后来用Stylish插件时, 又表现了
+完美的查找元素的功能. 这次我要调试CSS, 又发现了它的WYSIWYG也是那么强劲
+
+目前我对CSS的理解是这样的(不一定正确, 仅供参考):
+
+1. 浏览器按照HTML里面编写的顺序, 依次加载和解析CSS, 如果有多个CSS段匹配同一个
+元素, 那么这些设置同时生效, 假设里面对同一个内容多次进行设置, 那么最后一个设置
+有效. 利用这个特点, 一般把bootstrap写在前面, 然后再引用一个我们自己写的配置文件,
+覆盖那些我们不太满意的地方
+
+2. 理解CSS的[盒子模型](http://www.w3schools.com/css/css_boxmodel.asp)非常重要,
+![box model](http://www.w3schools.com/css/box-model.gif)
+
+有几个我觉得需要注意的地方:
+
+* 一个元素的width指的是content部分的宽度,不包括padding和border
+* padding和border取负值没有意义, 按0算
+* margin可以取负值, margin其实表示的是与父容器的相对位置, 比如margin-left就等于
+`Px-x`, 其中`x`指本身border左上角的横坐标, `Px`指父容器content部分左上角横坐标,
+所以margin-left取负值时, 表示`x>Px`, 也就是说这个元素的左边要突出父容器
+* 当父容器大小不够容纳这个元素的时候, 这个元素的范围会凸出去, 而且margin-right
+可能会被舍弃(仅在Chrome中测试过, 其他浏览器未测试)
+
+### 浏览器兼容性
+
+我只在我的Ubuntu的Google Chrome浏览器中测试了各种效果, 其他浏览器都没有怎么测试.
+在一个Win7的IE9上试过一下, 一开始是中文乱码, 后来加了一下charset的meta信息后, 
+就可以正常显示了. 然后又发现Disqus在IE9上显示不了, 经过一阵子的折腾, 没有找到
+解决的办法, 暂时放弃.
+
+本来找的那个HTML5模板上, 写了一些兼容老IE浏览器的内容, 但是经过慎重考虑, 我决定
+把大部分删掉, 就保留了一个提示升级浏览器的内容. 之所以这么做有两个原因
+
+1. 为了兼容老浏览器, 需要一些在线的js脚本, 这些脚本大部分是Google提供的, 由于
+众所周知的原因, 这些内容很可能访问不了, 从而会导致页面载入的速度非常慢
+
+2. 这个blog记录的绝大部分是技术内容, 如果一个喜欢技术的人, 是不可能一直用着古董
+级别的IE6, 这样的人不是我的目标读者, 所以也没必要为了他们让我去纠结半天. 其实我
+甚至想直接不允许任何IE用户访问, 毕竟即使是IE9也有各种各样的毛病, 不过暂时还没
+下手, 反正我肯定是不会在兼容IE系的浏览器花时间的, FF的兼容性有时间的话还是要研究
+一下的.
+
+
+{# vim: ft=markdown
+#}
