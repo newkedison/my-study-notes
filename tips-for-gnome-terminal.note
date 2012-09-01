@@ -3,7 +3,8 @@ title: gnome-terminal技巧
 description: some usual and useful tips for gnome-terminal
 created: !!timestamp '2012-02-06 14:32:54'
 tags:
-    - bash
+    - shell
+    - tips
 ---
 
 {% raw %}

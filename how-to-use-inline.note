@@ -4,6 +4,7 @@ description: some knowledge about inline in gcc/g++
 created: !!timestamp '2012-01-17 17:54:10'
 tags:
     - c
+    - cpp
     - gcc
 ---
 {% raw %}

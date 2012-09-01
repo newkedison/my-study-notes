@@ -3,8 +3,7 @@ title: nmap命令的使用及相关端口信息
 description: nmap命令的使用及相关端口信息
 created: !!timestamp '2011-12-03 14:13:38'
 tags:
-    - bash
-    - command
+    - shell
 ---
 
 {% raw %}
