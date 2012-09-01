@@ -1,0 +1,77 @@
+---
+title: 安装HP WebOS
+description: WebOS is open source and release source code, I will install it on my ubuntu
+created: !!timestamp '2012-09-01 08:32:58'
+tags:
+    - WebOS
+    - install
+---
+
+{% raw %}
+
+## 安装HP WebOS
+
+早上在cnBeta上看到HP终于把WebOS的源码公布了, 从N个月前HP就说WebOS要开源, 但是
+一直没看到Roadmap, 今天终于是犹抱琵琶半遮面的搞出来一个beta版
+
+项目的网站在: <http://openwebosproject.org>  
+代码托管在GitHub: <https://github.com/openwebos>
+
+这次公开的源码, 包含两个版本, 一个是面向嵌入式的, 还有一个面向Ubuntu Desktop的,
+所以我一时兴起, 就开始下载和安装desktop版本
+
+### 安装Desktop版的过程
+
+首先要先clone安装的脚本, 地址在
+[这里](https://github.com/openwebos/build-desktop), 里面有安装说明, 在安装前,
+还要先用apt-get安装一堆其他的库
+
+运行`./build-webos-desktop.sh`开始安装, 一开始安装还是比较顺利的, 下载了一个200
+多M的Qt, 编译了半天也装上了. 
+
+但是在下载WebKit\_0.3的时候出问题了, 等了半天死活
+下载不下来, 后来我只能开了goagent, 先手动把这个压缩包下载下来, 然后放在安装脚本
+默认的下载路径(~/luna-desktop-binaries/tarballs)里面, 然后看了一下安装脚本,
+如果重新开始的话, 前面下载的东西需要重新下载和编译安装, 这显然没有必要, 
+所以我就直接修改安装脚本, 把前面已经安装过的部分注释掉, 这里需要注意两点:
+
+1. 下载下来的文件名是WebKit\_0.3s.zip, 复制过去的时候要改名为WebKit\_0.3.zip
+2. 在build-webkit函数里面的do-fetch一句必须保留, 里面会自动判断是否已经下载好,
+然后会自动解压和建立文件夹, 所以这一句必须保留
+
+WebKit的编译非常之慢, 虽然不到100M, 但是比前面Qt的编译还要慢. 经过漫长的等待,
+整个编译终于完成, 估计花了1个多小时吧. 整个安装过程生成的log也要有近30M.
+
+然后运行`sudo ./install-webos-desktop.sh`, 瞬间安装完成, 看起来也就是用`ln -s`
+做了几个符号链接而已
+
+### 运行Desktop版本
+
+根据[build-desktop主页](https://github.com/openwebos/build-desktop)的介绍,
+依次执行下面的命令:
+
+    ./service-bus.sh start
+    ./service-bus.sh services
+
+然后如果是第一次运行, 还要再开一个terminal运行一下
+
+    ./service-bus.sh init
+
+最后再开一个新terminal, 运行
+
+    ./run-luna-sysmgr.sh
+
+然后就可以看到WebOS的庐山真面目了.
+
+需要注意:
+
+1. 程序的高度应该是固定的800, 不能调节, 我的笔记本是1366\*768的分辨率, 
+所以下面的部分显示不全, 后来是外接了一个显示器才解决的
+2. 运行过程中, 控制台上会有好多提示, 据说都可以无视, 当然, 让我看也是看不懂的
+3. 程序退出后, 要运行一下`./service-bus.sh stop`, 把前面开的daemon关掉
+4. 目前我还找不到怎么安装新的app, 只能玩玩自带的几个简单工具, 
+体验一下卡片式多任务的感觉
+
+{% endraw %}
+{# vim: ft=markdown
+#}
