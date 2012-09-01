@@ -1,0 +1,69 @@
+---
+title: mitmproxy & mitmdump 使用介绍
+subtitle: 未完待续...
+description: mitmproxy & mitmdump can dump and modify http flow. This artical will write some usage for them
+created: !!timestamp '2012-08-30 11:42:53'
+tags:
+    - HTTP
+    - dump
+    - python
+complete: 0
+---
+
+{% raw %}
+## mitmproxy & mitmdump 使用介绍
+
+### 简介
+
+mitmproxy和mitmdump是一个用于监视和修改http请求的工具,具体用来干什么就靠个人发挥
+了. mitmproxy是带交互界面的, 而mitmdump是纯命令行.
+
+### 官网
+
+官网地址: <http://mitmproxy.org>
+
+Github: <https://github.com/cortesi/mitmproxy>
+
+### 下载&安装
+
+在[官网](http://mitmproxy.org)有介绍多种安装方法, 最简单的就是使用`pip`了:
+
+    $ sudo pip install mitmproxy
+
+其他安装方法我没尝试, 详见[官网](http://mitmproxy.org)
+
+### 运行&使用
+
+mitmdump是纯命令行工具, 所以需要通过参数来控制, 简单的使用方法使用参见
+[说明文档](http://mitmproxy.org/doc/mitmdump.html), 由于我自己还没用过, 所以暂时
+无法详述
+
+mitmproxy是带交互的, 算是实时监测吧. 运行的方法就是直接
+
+    $ mitmproxy
+
+就可以了. 如果要看具体的参数, 可以加上`--help`查看
+
+然后设置浏览器的代理为127.0.0.1:8080, 这样所有的HTTP请求就会通过mitmproxy过滤后
+再发送出去, 如果要修改HTTP的内容, 就要自己写脚本了, 这方面还在研究, 先挖个坑
+
+#### mitmproxy常用按键
+
+<table class="table table-striped table-bordered">
+  <thead>
+    <tr><th>按键</th><th>功能</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>q</td><td>退出或返回上一页</td></tr>
+    <tr><td>方向键或hjkl</td><td>方向键</td></tr>
+    <tr><td>?</td><td>显示按键帮助</td></tr>
+    <tr><td>[Tab]</td><td>切换页面</td></tr>
+    <tr><td>[Enter]</td><td>查看当前记录的详细内容</td></tr>
+  </tbody>
+</table>
+
+
+{% endraw %}
+{# vim: ft=markdown
+#}
+
