@@ -1,0 +1,244 @@
+---
+title: android程序开发基本流程
+description: descript the main steps of build a android app
+created: !!timestamp '2012-09-10 16:55:57'
+tags:
+    - android
+    - shell
+---
+
+{% raw %}
+
+## android程序开发基本流程
+
+**操作系统是Ubuntu 12.04 32bit, 不保证在其他系统下完全一致**
+
+### 搭建开发环境
+
+*这一步是比较麻烦的事情, 我花了两天时间, 才把Ubuntu下的开发环境勉强弄起来,
+而且还有随时出问题的可能*
+
+基本的步骤如下(但是可能会遇到各种问题, 我也记不清了, 有问题随时Google):
+
+1. 安装java7开发包jdk, jdk这个包在库里面是没有的, 应该是版权的问题. 库里面只有
+openJDK, 这个据说不能用, 而且google也没有提供对应的平台工具, 
+所以必须是原版的jdk, 而且要注意, 不是jre, jre只是运行包, 做开发是不够的.
+
+    要安装jdk, 真不是一个很轻松的事情, 找到的很多方法都不能用, 
+    最后试了能用的方法如下(但是这个方法也无法保证一直有用,详见后文):
+
+        sudo add-apt-repository ppa:eugenesan/java
+        sudo apt-get update
+        sudo apt-get install oracle-java7-installer 
+
+    据我推测, 似乎是由于jdk安装比较麻烦, 于是有人在GitHub上弄了一个
+    [项目](https://github.com/flexiondotorg/oab-java6), 里面写了一个脚本来安装,
+    然后就有人做成了ppa, 方便使用. 但是这种私人的ppa总归有点不太放心, 
+    稳定性也成问题, 所以可能也无法一直使用. 但是无论如何, 我这次是装好了.
+
+2. 下载和安装android开发工具和平台工具
+
+    android开发工具叫android SDK, 在
+    [这里](http://developer.android.com/sdk/index.html)下载, 
+    但是这个只是最基本的工具, 还没办法用于开发, 因为缺少平台对应的工具,
+    这些平台工具就通过这个工具里面的一个管理器进行下载(其实也是一种包管理的方法,
+    要是能直接集成到软件中心就好了).
+
+    下载后解压到任意目录, 比如`~/`目录, 会有一个android-sdk-linux的文件夹.
+    然后找到里面的tools/android程序, 这个就是包管理工具(还有其他功能, 见后文)
+
+    使用`./android`运行程序, 如果前面java7已经装好了的话, 
+    就会搜索出一堆的平台工具, 我反正全部勾选, 然后慢慢下载, 花了一天的时间,
+    才终于把所有东西下完, 总计有8G左右, 下Google相关的工具很快, 
+    10M光纤基本可以达到900K, 但是下载那些Motorola的包就很悲剧了, 最快也就40K,
+    中途还不知道什么原因下载不动了, 不过这个好解决, 只要重新启动程序, 
+    前面已经下载和安装好的工具不需要再装.
+
+    另外, 在下载的过程, 还被迫在[HTCdev](http://www.htcdev.com)和
+    [MOTODEV](https://developer.motorola.com)注册了账户, 
+    因为下载他们的平台工具时, 需要提供用户名和密码才能下载
+
+    下载之后, 这些工具都会自动安装好, 无需我们做什么工作, 到目前为止, 
+    开发所必不可少的工具就安装完成了. 但是, 对于新手来说, 我们还需要一个IDE,
+    而公认的最适合android的IDE就是eclipse了. 倒不是说开发android非eclipse不可,
+    但是前期使用eclipse可以帮我们省好多事情, 快速进入开发程序的步骤, 
+    熟悉整个android程序开发的流程. 等熟悉之后, eclipse就可以抛弃了,
+    不是eclipse不好用, 而是太占资源, 我的电脑跑起来太卡, 如果电脑配置够的话,
+    eclipse真的是一个很不错的工具.
+
+3. 下载安装eclipse
+
+    在软件中心里面, 可以直接安装eclipse, 但是版本较低, 我使用之后, 会出现
+    
+        unable to load graphics library [cairo is required] 
+
+    这样的错误提示, 然后很多WYSIWYG的功能都打不开, 后来我跑到eclipse的
+    [官网下载页面](http://www.eclipse.org/downloads/)下载了最新的
+    Classic 4.2版本, 问题才得以解决.
+
+    安装完eclipse后, 还要安装一个Google提供的插件ADT, 参照
+    [这里](http://developer.android.com/sdk/installing/installing-adt.html)
+    的说明进行安装即可, 速度还是很快的. 这个插件安装之后, 可以大大提高eclipse
+    开发android程序的效率, 所以一般都是要安装的, 否则装了eclipse作用也不大
+
+    注意ADT插件安装之后, 要指定一下android SDK的路径, 这样才能正确识别
+
+### 使用eclipse开发
+
+eclipse在安装了ADT插件后, 就可以进行android程序的开发, 
+按照<http://developer.android.com>提供的
+[GetStarted教程](http://developer.android.com/training/index.html)
+进行练习, 就可以熟悉eclipse的各项操作, 从建立工程到最后放入模拟器中运行,
+这整个过程多应该可以了解
+
+基本上开发分为以下几步:
+
+* 建立工程和第一个Acitivity
+* 在res/layouts/里面用XML放各种控件
+* 在src/里面写java代码, 设置控件的各种行为和响应操作,
+这里要特别注意Activity在不同情况下的各种状态和回调函数, 教程里面称之为生命周期
+(lifecycle)
+* 程序编好后, 放到模拟器(AVD)里面模拟运行
+
+还有一些这个入门教程里面没说:
+
+* 如果存在错误, 可以使用debug功能直接在模拟器里面进行在线调试
+* 程序要正式发布给别人使用, 需要进行签名, 签名教程见
+[这里](http://developer.android.com/tools/publishing/app-signing.html)
+* 和android SDK一起下载下来的, 还有一堆例程, 里面我觉得最有用的, 就是那个
+APIDemos的教程, 基本上囊括了所有自带控件的用法, 绝对是可以随时查阅的宝典
+* 在支持多语言的时候, 简体中文是加上一个-zh-rCH的后缀, 
+比如values改为values-zh-rCN, 一开始我以为是加-zh, 一直编译不过去.
+
+### 使用命令行开发
+
+其实使用eclipse开发挺不错, 特别是调试做的很好, 还能实时检查代码的各种问题, 
+及时提示, 还有各种自动补全, 都是很好的功能. 但是, 不知道什么原因, 在我的电脑上,
+eclipse运行起来特别慢, 光开一个eclipse和一个AVD, 内存占用就到了80%以上, 
+而且估计用到了swap, 时不时CPU占用也很高. 逼的我连Chrome都没办法开, 
+专门去下载了一个占用资源少的浏览器来查Google.
+
+最后没办法, 决定舍弃eclipse, 转用命令行来操作, 其实在通过eclipse熟悉了一下
+android整个文件体系之后, 我觉得用命令行也问题不大, 总共没几条命令, 
+其他的时候都是在写代码, 这个用vim也是一样很爽的.
+
+在使用下面的命令前, 需要先把android SDK的目录(假设为~/androidSDK)下面的tools和
+platform-tools加入PATH, 也就是用下面的命令:
+
+    export PATH=$PATH:~/androidSDK/tools/:~/androidSDK/platform-tools/
+
+下面列出常用的命令:
+
+**建立工程**
+
+    android create project --target 47 --name 工程名称 --path 工程保存目录 \  
+    --activity 第一个Acitvity名称 --package 包名称
+
+其中`--target 47`指定了目标平台, 这个值是通过`android list targets`查到了, 
+根据教程里面说的, 选择越新的平台越好. 我目前看到最大的是48, 
+但是显示的type是Add-On, 所以我选择了47, Type是Platform, 我觉得这个比较靠谱
+
+`--name`指定工程的名称, 也就是以后软件的名称, 一般用英文, 以后可以实现多语言的
+
+`--path`是工程目录, 文件夹如果不存在, 会自动建立
+
+`--activity`指定运行程序时第一个启动的Activity的名字
+
+`--package`指定包名称, 一般的命名规则, 是把公司网址倒过来, 再加上程序的名称,
+比如baidu的输入法就可以叫com.baidu.inputmethod, 这是惯例, 不是强制要求
+
+**编译**
+
+这个比较简单, 用`ant debug`编译debug版本, 会自动签名(后面再讲签名的事情), 
+用`ant release`编译release版本, 不会自动签名
+
+**生成密钥文件**
+
+这个操作只需要进行一次, 生成一个密钥文件之后, 以后一般就用这个文件给自己的所有
+程序签名, 这样做的原因见
+[教程](http://developer.android.com/tools/publishing/app-signing.html#strategies)
+
+生成密钥文件的命令是:
+
+    keytool -genkey -v -keystore 文件名 -alias 别名 -keyalg RSA \  
+    -keysize 2048 -validity 10000
+
+`-keystore`指定生成的文件名, 一般用.keystore做扩展名, 
+如果不指定路径, 那就生成在当前目录
+
+`-alias`指定别名, 据说只有前8个字母有效, 在等会签名时需要用到这个别名,
+但是不知道有什么用
+
+`-keyalg`指定加密算法, 就用RSA好了
+
+`-keysize`指定密钥长度, 默认1024, 保险起见, 一般建议2048
+
+`-validity`指定过期天数, 一般建议10000, 如果打算放到Google Play, 至少要保证能
+用到2033年底, 这个过期天数一般取得很大, 这也是教程里面建议的
+
+在执行之后, 会询问很多问题, 注意里面的密钥文件密码和密钥密码设置后要记住, 
+以后一直要用的, 而且为了安全性, 建议设置的比较复杂. 不过我不知道这两个密码
+分别派什么用场, 反正允许设置为相同的, 我就设置为相同的密码了
+
+下面假定生成的密钥文件为~/android.keystore
+
+**签名**
+
+    jarsigner -verbose -sigalg MD5withRSA -digestalg SHA1 \  
+    -keystore ~/android.keystore apk文件名 密钥文件的别名
+
+`-sigalg`和`-digestalg`指定算法, 似乎必须是这两个值, 而且必须写在命令里面
+
+`-keystore`指定密钥文件
+
+后面两个参数分别指定要签名的apk文件名, 还有是密钥文件的别名
+
+**对齐**
+
+为了提高程序的运行效率, 在签名后, 最好进行一下对齐的操作, 这一步操作不是必须的,
+但是一般顺手就做了
+
+    zipalign 4 签名后的apk文件 生成的文件名
+
+第一个参数`4`表示对齐的字节数, 必须是4, 不能改
+
+第二个参数要已经签名过, 还没有进行对齐操作的apk文件
+
+第三个参数是生成的对齐过的文件的名字, 可以用-f参数直接替换原来的文件
+
+要注意这个操作需要在签名后进行, 如果先对齐再签名, 程序又会变成不对齐的,
+需要重新进行对齐
+
+**放到AVD运行**
+
+AVD是一个测试程序的好地方, 新建一个AVD的教程见
+[GUI版](http://developer.android.com/training/basics/firstapp/running-app.html#Emulator)和
+[命令行版](http://developer.android.com/tools/devices/managing-avds-cmdline.html)
+
+AVD要先运行起来, 如果只运行了一个AVD, 那么导入apk的命令如下
+
+    adb install apk文件名
+
+如果同时运行了多个AVD, 则需要用`-s`指定AVD, 比如
+
+    adb -s emulator-5554 install apk文件名
+
+-s后面的参数可以通过`adb devices`查询
+
+在导入的时候, 如果原来已经导入过, 必须签名是一致的, 否则要先卸载AVD中的程序
+
+### 常用网址
+
+下面列出开发过程中需要经常访问的网站:
+
+* [android developer主页](http://developer.android.com>)
+
+    * [入门教程](http://developer.android.com/training/index.html)
+    * [参考手册](http://developer.android.com/reference/packages.html)
+    * [命令行运行](http://developer.android.com/tools/building/building-cmdline.html)
+
+* [Google](https://www.google.com/ncr)
+
+{% endraw %}
+{# vim: ft=markdown
+#}

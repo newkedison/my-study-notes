@@ -176,6 +176,26 @@ PS：
 2. 可以比较任意两个历史commit之间的区别，先要用git-log看这两个commit的hash值，然后用
         $ git diff 0123456 abcdef0
 
+## --bare的作用
+
+参考: [Git bare vs. non-bare repositories](http://www.bitflop.com/document/111)
+
+虽然是分布式版本控制, 但是git有中心版本库的概念, 这些中心版本库就是bare的, 
+而其他的非中心库就是non-bare的. 
+
+这两种版本库的区别在于:
+
+* bare版本库里面没有源码文件, 只有版本历史, 也就是一般在.git文件夹里面的东西.
+而non-bare库里面有源码文件, 还有.git文件夹, 但是一般只会包括master这个branch,
+其他的branch是没有的
+* 只有bare库才可以被push, 也就是只能从non-bare库push到bare库(能不能从bare库push
+到bare库没测试过)
+* non-bare库可以pull或者fetch, 而bare库只能fetch(而且好像还要加其他参数), 
+因为pull其实是fetch+merge, 而bare库因为没有源码文件, 所以不能merge
+
+bare库可以不只是一个, 可以clone出来一个bare库, 只要在clone的时候加上--bare就行.
+另外还有另外一个--mirror的选项, 同步的东西比--bare更全, 具体区别参见
+[StackOverFlow](http://stackoverflow.com/questions/3959924/whats-the-difference-between-git-clone-mirror-and-git-clone-bare)
 
 {% endraw %}
 {# vim: ft=markdown

@@ -212,6 +212,29 @@ tags:
         foo(x=2, b='0', d='', a=-1)   a=-1, b='0', c=(), d={'x':2, 'd': ''}
         foo(1, 2, d=None, 5) 错误，有等号的参数后面不能再有没有等号的参数
 
+13. logging模块相关
+
+    * logging.basicConfig函数仅在第一次调用有效
+    * log的记录主要分为四块:
+
+        1. Logger 负责提供访问接口
+        2. Handler 发送记录到内容到不同的地方(stdout, file, socket, email)
+        3. Filter 过滤日志的内容
+        4. Formatter 将最终要输出的日志内容格式化成字符串
+
+    * logging.getLogger(name)用于根据名字取得一个logger的实例, 这样可以使得需要
+    记录log的函数不需要传入一个logger的实例. 一般name这个参数指定为`__name__`,
+    就是模块的名称, 这样方便建立层级关系
+    * 根据名字取得的logger实例具有层级管理, 用小数点分隔, 比如
+    `logging.getLogger('foo')`就是`logging.getLogger('foo.bar')`的父Logger,
+    子Logger可以继承父Logger的handler(消息发送目标)还有等级. 对于一个Logger来说,
+    有一个level属性和一个getEffectiveLevel()的方法, 后者是最终确定的等级, 
+    而level如果非0, 则getEffectiveLevel()返回值和level一样, 如果level为0, 
+    则返回值和父Logger的getEffictiveLevel()返回值一样
+    * logger和handler都有setLevel()函数, 一个logger可以有多个handler, 所以logger
+    的setLevel()相当于总开关, 然后每个handler的setLevel()再决定自己要记录哪些
+    等级的日志. 也就是说, 如果handler设置的level比logger低是没有意义的
+
 {% endraw %}
 
 {#
