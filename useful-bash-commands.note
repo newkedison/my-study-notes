@@ -189,6 +189,18 @@ fread需要的字节数直接到一个整型变量中，后面就可以根据需
 
 `-p`参数表示同时列出PID，然后要kill还是要干嘛就方便了
 
+## 设置launcher隐藏模式
+
+参考[这里](http://askubuntu.com/questions/172505/set-launcher-reveal-mode-to-intellihide)
+在Unity-2D模式下, 可以使用以下命令设置launcher的隐藏模式为智能模式:
+
+    gsettings set com.canonical.Unity2d.Launcher hide-mode 2
+
+后面是数字, 0表示始终显示, 1表示始终隐藏, 2表示智能隐藏模式, 比较好用.
+但是有时候不知道什么原因, 会变成1, 需要重新设置一下才行.
+
+
+
 {% endraw %}
 {# vim: ft=markdown
 #}

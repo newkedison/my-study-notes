@@ -1,0 +1,39 @@
+---
+title: android程序开发
+description: some note recorded down when I writting android app
+created: !!timestamp '2012-09-30 22:55:50'
+tags:
+    - tips
+    - android
+---
+
+{% raw %}
+
+## 基本知识
+
+我觉得有几个基本概念会贯穿整个开发的过程, 如果这些概念不能理解透彻的话, 
+几乎没办法开发出像样的程序, 这里不考虑java本身的东西, 只关注android新增的概念
+
+### 1. Activity
+
+### 2. Intent
+
+### 3. Service
+
+### 4. BroadcastReceiver
+
+### 5. Adapter
+
+### 6. Bundle
+
+### 7. LifeCycle
+
+### 8. fragment
+
+### 9. Notification
+
+
+
+{% endraw %}
+{# vim: ft=markdown
+#}

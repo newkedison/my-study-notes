@@ -135,6 +135,18 @@ Vector可以说是一个线程安全的ArrayList, 不过据说一般都不需要
 因为java后来提供了一组wrapper, 用来把原来不是线程安全的Collection变成线程安全.
 参考上面的第二个链接
 
+### import static
+
+由于java无论什么总归要套一个class, 所以当把一些常用的常量或者函数放在一个class
+里面之后, 在调用的时候总要写类名, 这显然很麻烦
+
+还好那帮整java的大佬爷们估计自己也用烦了, 所以整出来import static的方法.
+
+参考[这里](http://docs.oracle.com/javase/1.5.0/docs/guide/language/static-import.html),
+可以看到, 只要类里面用static声明的常量/变量/函数, 然后用import static将其import,
+那么后面就可以不需要写类名了.
+
+当然, `import static com.example.util.*;`也是可以的, 也是更常用的.
 
 
 
