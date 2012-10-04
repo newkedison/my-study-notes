@@ -11,7 +11,7 @@ tags:
 
 # 前言
 
-===
+----------
 
 破解别人的软件总归是不正确的, 但是就像毒品一样, 无论其多么罪大恶极, 
 只要有软件开发, 就肯定有软件破解, 一个软件如果没有被破解, 
@@ -46,7 +46,7 @@ tags:
 
 # 参考资料
 
-===
+------------
 
 [Designing for Security](http://developer.android.com/guide/practices/security.html)
 
@@ -58,10 +58,20 @@ tags:
 
 [android-apktool](https://code.google.com/p/android-apktool/)
 
-apktool是一个集成了大部分破解android程序所需工具的开源项目, 
+apktool是一个集成了大部分破解android程序所需工具的开源项目, 使用简单, 功能强大, 
 基本上有这个工具就足够满足我们全部需求了
 
+[How to use APKTOOL](http://forum.xda-developers.com/showthread.php?t=1891686)
+
+xda-developers上的一个教程, 讲的还是挺详细的
+
+[How-To: Decompile/Recompile apk's with ApkTool](http://androidforums.com/esteem-all-things-root/520917-guide-how-properly-decompile-recompile-apks-apktool.html)
+
+又是一个apktool的使用教程
+
 # Android程序的安全性
+
+-------------
 
 就我目前的理解, android程序的安全性是较低的, 主要原因有以下几点:
 
@@ -86,6 +96,49 @@ android是通过每个程序用一个用户账户来运行这种方式来隔离�
 至少以后要给程序root权限的时候要慎重, 特别是如360这类软件(我没装过360, 
 不太清楚其需不需要root权限)
 
+# 破解基本流程
+
+-------------
+
+其实有了apktool之后, 反编译一个android程序已经很容易了, 
+先从上面的地址下载apktool, 要下载两个文件, 
+一个是各平台公用的apktool1.4.3.tar.bz2(不用管版本号, 找个最新的下载就行), 
+还有一个是平台相关的, 根据系统进行选择, 
+我下载了apktool-install-linux-r04-brut1.tar.bz2, 然后解压出来, 总共有三个文件,
+把这三个文件放在一起, 然后加到PATH里面, 这样就可以使用下面的命令了
+
+## 反编译apk文件
+
+假设要反编译的apk文件为foo.apk, 使用下面的命令
+
+    apktool d foo.apk
+
+里面的`d`表示decode, 就是反编码, 然后加上apk文件名, 
+这样会在当前文件夹生成一个叫foo的文件夹, 里面就是反编译出来的内容. 
+如果要指定文件夹的名字, 用
+
+    apktool d foo.apk dir-name
+
+## 修改apk文件的内容(未经验证, 不保证正确)
+
+如果只是想提取apk中的资源, 或者研究人家的编程技巧, 那就没必要修改了, 
+但是很多时候, 不管是出于什么目的, 反编译的目的都是为了修改原来的东西.
+
+反编译出来的东西, 那些xml文件可以直接修改的, 图片什么的也可以直接替换. 
+代码修改起来相对比较麻烦, 毕竟那不是现成的java代码, 需要一定的耐性. 
+但是, 不可能去把所有代码看一遍并全部理解, 一般都是要找关键那段代码看, 
+然后进行修改, 这里面的门道就太多了, 我也只是知道些皮毛, 这里就不写了. 
+上面那篇中文的教程里面有讲通过xml文件里面的字符串找到对应的代码段的方法.
+
+## 重新打包apk(未经验证, 不保证正确)
+
+修改完程序之后, 还需要把原来的程序重新打包回来, 使用下面的命令
+
+    apktool b dir-name apk-name
+
+`dir-name`就是上面反编译出来的文件夹, 然后`apk-name`指定重新打包后的文件名, 
+
+需要注意的就是, 这样打包出来的apk文件, 是没有签名的, 需要签名和对齐后才能用
 
 
 

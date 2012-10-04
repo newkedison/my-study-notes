@@ -11,6 +11,8 @@ tags:
 
 ## 基本知识
 
+-----------
+
 我觉得有几个基本概念会贯穿整个开发的过程, 如果这些概念不能理解透彻的话, 
 几乎没办法开发出像样的程序, 这里不考虑java本身的东西, 只关注android新增的概念
 
@@ -31,6 +33,88 @@ tags:
 ### 8. fragment
 
 ### 9. Notification
+
+## sticky broadcast
+
+在写检测电池电量的程序时, 
+需要用一个broadcast receiver去接受电池状态改变的broadcast, 
+里面提到了sticky这个概念.
+
+一般来说, 我们注册一个broadcast receiver的时候, 使用
+`registerReceiver(receiver, filter)`这个函数, 
+第一个参数要指定一个具体的receiver, 用来处理待会会收到的broadcast信息.
+但是有一些特殊的broadcast, 第一个参数可以赋值null, 然后通过这个函数返回的Intent,
+可以直接获取到我们需要的信息, 这样的broadcast, 就是"sticky" broadcast.
+
+最典型的应用就是在获取电池状态的时候, 我们只是要获取当前的电量, 
+并不是要去时刻监视电池状态, 而ACTION_BATTERY_CHANGED这个broadcast, 
+是一个sticky broadcast, 所以我们可以给第一个参数传null, 然后通过返回值, 
+解析出来**上一次**广播这个broadcast信息时的内容, 这样我们就可以无需等待, 
+直接取得返回值了.
+
+sticky broadcast的实现, 其实就是系统把这个信号携带的Intent保存起来, 
+一旦有匿名的receiver, 就直接把这个Intent作为registerReceiver的返回值.
+
+平时我们发送broadcast信息是使用`sendBroadcast(Intent)`这个函数, 
+而也可以通过`sendStickyBroadcast(Intent)`来发送一个sticky broadcast.
+这样系统就会自动把这个intent缓存下来, 方便后面其他地方查询
+
+参考资料: 
+[1](http://stackoverflow.com/questions/3490913/what-is-a-sticky-intent-android),
+[2](http://stackoverflow.com/questions/2584497/what-is-the-difference-between-sendstickybroadcast-and-sendbroadcast-in-android)
+
+## adb的使用
+
+参考资料:
+
+[adb](http://developer.android.com/tools/help/adb.html), 
+[logcat](http://developer.android.com/tools/debugging/debugging-log.html)
+
+adb是一个非常强大的工具, 上面的资料中已经对其用法进行了详细的介绍, 
+经常用到的有好几个命令:
+
+    adb start-server
+    adb kill-server
+
+启动或者关闭adb服务器, adb只能有一个server, 然后可以有多个client,
+这些server和client都是运行在电脑上的, server去连接各个模拟器和手机,
+client从server获取自己需要的信息
+
+    adb connect 192.168.1.100
+
+通过ip地址连接到一个模拟器或者手机, 一般是用于连接手机的, 
+在google play有一个叫adbWireless的app, 可以让我们不需要通过USB进行调试, 
+而是通过wifi连接, 这样可以不用插数据线, 用起来非常方便.
+
+    adb devices
+
+查看当前server连接了哪些模拟器或手机, 以及他们的状态, 如果连接了多个, 
+后面那些命令, 都要先加上`-s`参数, 指定是针对那个模拟器或手机.
+
+    adb install foo.apk
+
+安装一个apk文件到模拟器或手机里面, 一般会加上`-r`参数, 
+表示替代当前存在的程序.
+
+    adb pull <remote> <local>
+    adb push <local> <remote>
+
+在电脑和模拟器或手机之间传输文件, pull是从手机到电脑, push是从电脑到手机, 
+remote指的是手机里面的文件地址, 比如/sdcard/media/, local是电脑的路径, 
+这里的复制是递归的, 可以复制文件或文件夹, 比用其他的方式都要方便. 
+因为4.1开始已经禁用了手机的U盘功能, 传文件很麻烦, 用ftp的话, 
+从电脑都手机还算方便, 但是从手机到电脑总是会出问题, 用这个命令就好多了.
+
+    adb forward tcp:8888 tcp:9999
+
+端口转发, 将主机的8888端口, 转发到虚拟机或者手机的9999端口
+
+    adb logcat <filter>
+
+查看日志的命令, 这个在调试中是非常重要的, 几乎所有的调试都需要依靠日志, 
+后面的filter可以是多组用空格分开的tag:priority, 其中tag用来区分不同的程序, 
+priority表示日志等级, 可以是V, D, I, W, E, F, S, 前面就是分别对应verbose, 
+debug, info, warning, error, fatal, 后面的S表示silent, 就是禁止任何等级的log,
 
 
 
