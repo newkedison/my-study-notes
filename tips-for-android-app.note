@@ -36,6 +36,8 @@ tags:
 
 ## sticky broadcast
 
+-----------
+
 在写检测电池电量的程序时, 
 需要用一个broadcast receiver去接受电池状态改变的broadcast, 
 里面提到了sticky这个概念.
@@ -64,6 +66,8 @@ sticky broadcast的实现, 其实就是系统把这个信号携带的Intent保�
 [2](http://stackoverflow.com/questions/2584497/what-is-the-difference-between-sendstickybroadcast-and-sendbroadcast-in-android)
 
 ## adb的使用
+
+--------------
 
 参考资料:
 
@@ -116,6 +120,98 @@ remote指的是手机里面的文件地址, 比如/sdcard/media/, local是电脑
 priority表示日志等级, 可以是V, D, I, W, E, F, S, 前面就是分别对应verbose, 
 debug, info, warning, error, fatal, 后面的S表示silent, 就是禁止任何等级的log,
 
+## 建立公用函数库
+
+----------------
+
+无论哪门编程语言, 都会通过不同的方式支持函数库(library), java不例外, 
+android当然也不例外. 
+
+不过我们在写android程序的话, 还是使用android的方式来安排函数库, 
+这样有两个优点: 一方面是在使用ant等工具时, 不需要额外的参数, 
+另一方面, 以后如果android弃用java, 过度起来比较容易
+
+要建立和引用公用库, 首先要参考
+[官网的这篇文章](http://developer.android.com/tools/projects/index.html), 
+里面分别讲了通过eclipse和命令行的方法, eclipse的方法我不需要用到, 
+所以下面主要介绍一下相关的命令行操作
+
+假设目录结构如下:
+
+    ~/android              android程序根目录
+    ~/android/CommonLib    公用库工程目录
+    ~/android/test         测试公用库的工程的目录
+
+首先在~/android/CommonLib中建立一个library project, 使用如下命令
+
+    android create lib-project --name <your_project_name> \
+          --target <target_ID> \
+          --path path/to/your/project \
+          --package <your_library_package_namespace> 
+
+这样建立的工程, 与其他普通工程比较, 其实就有一点点不同, 就是有个叫
+project.properties的文件, 里面有一句
+
+    android.library=true
+
+其他的和普通工程都没有区别.
+
+然后就可以在这个工程里面开始写公用的内容, 比如在
+`~/android/CommonLib/src/com/example/common/`文件里面, 
+新建一个`utils.java`的文件, 内容如下:
+
+    package com.example.common;
+    public class utils {
+      public static int sum(int a, int b) { return a + b; }
+    }
+
+现在我们要新建一个工程, 来使用上面定义的`sum`函数.
+
+在`~/andorid/test`文件夹, 建立一个普通工程, 然后添加通用库的引用, 命令如下:
+
+    android update project \
+          --target <target_ID> \
+          --path path/to/your/project
+          --library path/to/library_projectA 
+
+里面`--library`后面就填`--library ../CommonLib`, 要注意, 
+这里不能使用绝对路径, 不然等会编译的时候, 会报错, 没有找到具体原因, 
+反正使用相对路径就可以.
+
+这样建立的工程, 与以前工程的区别也就在project.properties文件里面多了一行
+
+    android.library.reference.1=path/to/library_projectA
+
+这里要关注等号前面的数字, 
+这个数字表示了这个库的优先级, 在发现冲突的时候, 优先级高(数字较小)的库优先, 
+而项目本身的优先级总是最高的, 另外, 还要求这些数字必须从1开始, 每次加1, 
+不能跳过, 否则从不连续的地方开始, 后面的库全部忽略. 至于会发生冲突的东西, 
+主要是各种资源的id和名字什么, 代码一般有package, 是不会冲突的.
+
+现在在`~/android/test/src/com/example/test/`里面开始写代码, 
+比如新建一个文件mainActivity.java, 内容如下(代码纯手写, 未测试):
+
+    package com.example.test;
+    import android.util.Log;
+    import static com.example.common.utils.*;
+
+    public class mainActivity extends Activity {
+      @Override
+      public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        Log.d("test", Integer.toString(sum(1, 1)));
+      }
+    }
+
+然后开始编译和测试, 先开一个模拟器, 或者连接一个手机, 
+然后开启logcat(相关操作可参考[上一篇](how-to-make-android-app.html)文章)
+
+编译和安装的步骤和正常的操作完全一样, 都是
+
+    ant debug
+    ant installd
+
+然后运行程序, 应该就可以看到logcat里面输出日志了.
 
 
 {% endraw %}
