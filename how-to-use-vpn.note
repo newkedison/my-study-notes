@@ -1,0 +1,159 @@
+---
+title: VPN搭建和使用
+description: how to build a VPN in a VPS, and connect to it in linux
+created: !!timestamp '2012-12-07 09:31:06'
+tags:
+    - vpn
+---
+
+{% raw %}
+
+**特别提醒:**
+虽然下面的操作看起来都挺靠谱的, 但是我最后并没有操作成功, 所以可能还有哪些地方
+没有做对, 但是经过多处比较, 应该绝大部分的操作是正确的
+
+---------------------
+
+## 在VPS上建立VPN服务
+
+---------------------
+
+参考: [How To Set Up A VPN In A VPS](http://freenuts.com/how-to-set-up-a-vpn-in-a-vps/)
+
+上面的连接里面, 步骤讲的已经很详细了, 基本操作如下:
+
+1. 购买并连接到vps上, 具体操作就不说了
+- 安装ppptpd
+
+        sudo apt-get install pptpd
+
+- 修改/etc/pptpd.conf, 这个文件主要是设置局域网的ip, 因为vpn就是一个局域网, 
+这里就是设置局域网的ip段. 找到如下的两行
+
+    >\#localip 192.168.0.1
+
+    >\#remoteip 192.168.0.234-238,192.168.0.245 
+
+    把前面的#号去掉
+
+- 修改/etc/ppp/pptpd-options, 这个文件设置DNS, 找到
+
+    >\#ms-dns 10.0.0.1
+
+    >\#ms-dns 10.0.0.2
+
+    改成:
+
+    >ms-dns 8.8.8.8
+
+    >ms-dns 8.8.4.4
+
+- 修改/etc/ppp/chap-secrets, 这个文件设置用户名和密码, 增加一行:
+
+        user1 pptpd password1 *
+
+    上面的教程说中间需要用Tab键隔开, 不过空格应该也行
+
+- 修改/etc/sysctl.conf, 设置ipv4转发, 去掉下面一行前面的#号
+
+    >\#net.ipv4.ip_forward=1
+
+- 使能ipv4转发, 执行以下命令
+
+        sudo sysctl -p
+
+- 允许路由功能, 执行下面的命令(这一步我没看懂, 可能问题就出在这里)
+
+        iptables -t nat -A POSTROUTING -s 192.168.0.0/24 -o eth0 -j MASQUERADE 
+
+- 重启pptpd服务, 执行:
+
+        sudo /etc/init.d/pptpd restart
+
+至此, vpn已经设置好了
+
+---------------------
+
+## 在Ubuntu下连接vpn
+
+---------------------
+
+### GUI方式
+
+1. 打开"Edit connections..."
+
+2. 选到vpn选项卡, 点"Add"按钮
+
+3. 选择默认的PPTP方式, 点"Create..."按钮
+
+4. Gateway填VPS的IP, User name填刚才设置的用户名(上面是user1), 
+Password填刚才设置的密码(上面是password1), 点击"Advanced..."按钮
+
+5. 勾选"Use Point-to-Point encryption (MPPE)", 然后点"OK"按钮
+
+6. 点"Save..."按钮, 连接创建完成
+
+7. 在选择网络的地方, 有一个"VPN Connections"的二级菜单, 里面会列出刚才创建的VPN,
+选择他, 如果正常的话, 应该是可以连接成功的. 
+
+8. 但是我连接成功之后, 就不知道怎么办了, 无论ping什么都ping不通
+
+### 命令行方式
+
+参考: [Connect to PPTP VPN from Linux only by one command](http://www.adminsehow.com/2010/04/connect-to-pptp-vpn-from-linux-only-by-one-command/)
+
+我测试过, 虽然新的连接也建立了, 也连接了, 但是最后还是同样不能上
+
+1. 首先需要pptp-linux和ppp这两个包, 一般来说, 应该已经都装好了
+
+        sudo apt-get install pptp-linux ppp
+
+2. 执行下面的命令建立一个新连接
+
+        pppd pty "pptp IP --nolaunchpppd" file /etc/ppp/options.pptp \
+        user USERNAME password PASSWORD 
+
+    注意其中大写部分, IP改为VPS的ip, USERNAME改为vpn用户名, PASSWORD改成密码
+
+    然后稍等10秒, 执行`ifconfig ppp0`, 应该可以看到新建了一个叫ppp0的连接.
+一开始我没建立成功, 查看了日志(`less /var/log/syslog`), 里面有一句
+
+    >LCP terminated by peer (MPPE required but peer refused)
+
+    经过一阵Google, 找到了解决方法, 就是编辑/etc/ppp/options.pptp文件, 把里面的
+
+    >\#require-mppe-128
+
+    前面的注释去掉, 然后再用上面的命令就可以了
+
+3. 设置连接后自动设置全局代理
+
+    在/etc/ppp/ip-up.d文件夹中新建一个文件vpn-up, 内容如下:
+
+        #!/bin/bash
+        H=`ps aux | grep 'pppd pty' | grep -v grep | awk '{print $14}'`
+        DG=`route -n | grep UG | awk '{print $2}'`
+        DEV=`route -n | grep UG | awk '{print $8}'`
+        route add -host $H gw $DG dev $DEV
+        route del default $DEV
+        route add default dev ppp0
+
+    在/etc/ppp/ip-down.d文件夹中新建一个文件vpn-down, 内容如下:
+
+        #!/bin/bash
+        H=`route -n | grep UGH | awk '{print $1}'`
+        DG=`route -n | grep UGH | awk '{print $2}'`
+        DEV=`route -n | grep UGH | awk '{print $8}'`
+        route del -host $H
+        route add default gw $DG dev $DEV
+
+    然后给这两个文件加上可执行权限(`chmod +x`), 这样就可以了
+
+4. 如果要断开连接, 用
+
+        killall pppd
+
+
+{% endraw %}
+{# vim: ft=markdown
+#}
