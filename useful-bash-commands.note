@@ -240,6 +240,27 @@ pgrep是用来查找一个指定进程名对应的进程ID, 默认只显示ID,
 其中`-l`要求显示完整进程名, 而`-f`表示后面的名字可以匹配路径, 而不止是命令名,
 如果不加上`-f`, 可能会遗漏一些进程
 
+## 连接无线网络
+
+参考资料:
+[How to connect to a wireless network manually (in terminal) without using network manager?](http://askubuntu.com/questions/16584/how-to-connect-to-a-wireless-network-manually-in-terminal-without-using-networ)
+
+首先是扫描可见的无线网络, 使用
+
+    $ sudo iwlist wlan0 s
+
+其中, wlan0是无线网卡的id, s是scan的缩写, 这个命令最好是用sudo来执行, 
+不然可能一些需要密码的网络会被忽略, 在执行后, 可能会提示
+
+> wlan0     Interface doesn't support scanning : Device or resource busy
+
+只要稍等片刻, 再执行一下就好了
+
+连接网络的时候, 使用:
+
+    iwconfig wlan0 essid ESSID_FROM_iwlist key PASSWORD 
+
+
 {% endraw %}
 {# vim: ft=markdown
 #}

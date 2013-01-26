@@ -1,0 +1,91 @@
+---
+title: lua相关知识
+description: Tips for lua programming
+created: !!timestamp '2013-01-03 14:14:48'
+tags:
+    - lua
+    - tips
+---
+
+{% raw %}
+
+## 参考资料
+
+[官网](http://www.lua.org)
+
+[Manual](http://www.lua.org/manual/5.2/)
+
+[Programming in lua](http://www.lua.org/pil/)
+
+## require相关
+
+参照内容: 
+
+<http://www.lua.org/pil/8.1.html>
+
+<http://www.lua.org/manual/5.2/manual.html#6.3>
+
+require用于引入外部扩展库, 其机制和C中的#include差不多,
+都是将目标文件整个读取到当前位置, 而且由于lua是解释执行的,
+所以从外部导入的文件内容就直接在当前位置执行了,
+其实require的作用和dofile函数非常类似, 但是略微有点区别,
+使其比dofile更加好用.
+
+require和dofile的区别主要有两点, 一是require会根据一些规则, 搜索目标文件,
+而dofile必须指定文件的完整路径, 二是require会避免同一个文件被多次执行,
+而dofile没有这个功能.
+
+由于lua是完全按照ANSI C来编写的, 所以其没有路径的概念,
+因而查找文件和一般的编程语言不一样, lua是采用模式匹配的方式来进行的. 
+
+**注意** lua从5.0到5.1到5.2, 虽然匹配的方式基本没变, 但是相关的名字都变了, 
+下面写的变量名都是按照5.2来写的, 如果我知道的话, 会在括号里写上前面版本的变量名
+
+当执行到`require("foo")`时, lua调用
+[package.searcher](http://www.lua.org/manual/5.2/manual.html#pdf-package.searchers)
+(在5.2是package.loader)这个table里面的函数, 依次进行查找, 这个table我们可以修改,
+从而实现修改搜索方式的目的. 后面介绍的都是默认的行为.
+
+lua首先查看package.loaded(5.1以前似乎是用\_LOADED全局变量)列表,
+看看`package.loaded["foo"]`是否为nil, 如果不为nil, 直接返回其值,
+如果是nil, 进行下一步
+
+在package.preload里面再次搜索, 看看模式是否已经预加载了, 如果是, 返回该值, 
+如果不是, 继续查找
+
+下一步是调用[package.searchpath](http://www.lua.org/manual/5.2/manual.html#pdf-package.searchpath)
+来搜索, 匹配的路径是package.path, 也就是
+`package.searchpath("foo", package.searchpath)`. package.path这个值在初始化时,
+会先找`LUA_PATH_5_2`这个环境变量, 再找`LUA_PATH`这个环境变量, 如果都为空,
+那么使用编译lua的时候luaconf.h文件里面的默认值
+
+如果还没找到, 那么还是调用package.searchpath, 现在是检查package.cpath这个变量,
+同样是依次匹配, 如果找不到, 那么进行最后一次尝试, 如果找到了,
+因为这个搜索出来的都是C写的so文件, 需要进行动态加载.
+首先会先查找个so文件的导出函数, 看看里面是不是有一个luaopen\_开头的函数, 
+而且后面的名字和模块名字一样. 比如`require("foo")`找到了一个foo.so文件, 
+那么就需要找一个叫luaopen\_foo的函数, 如果找到了这个函数, 那么调用
+[package.loadlib](http://www.lua.org/manual/5.2/manual.html#pdf-package.loadlib)
+("/path/to/foo.so", luaopen\_foo)来加载这个函数库, 然后整个过程完成. 
+**注意** 如果模块名称中含有"."和"-", 那么在推测加载函数的时候,
+会进行特殊处理, "."会被替换为"\_", 而第一个"-"和其前面的内容, 均会被舍弃.
+举个例子: a.b-c.d.so的加载函数必须是luaopen\_c\_d
+
+如果上面的方法都无效, 最后还会尝试一个all-in-one的方法, 
+这个方法会在package.cpath里面搜索, 假设要`require("a.b.c")`,
+那么先取第一个"."之前的部分, 在package.cpath里面搜索, 也即
+`package.searchpath("a", package.cpath)`, 如果能找到一个a.so文件,
+那么再检查这个a.so里面是否有一个叫luaopen\_a\_b\_c的函数, 如果有的话, 
+用这个函数来加载, 如果没有, 那整个过程以失败告终, lua会报错. 
+这个搜索方法, 使得我们可以将很多个不同的模块作为子模块放在同一个so文件里面, 
+然后提供不同的luaopen\_\*函数, 使得lua可以只加载其中部分函数
+
+当找到一个文件之后, package.searcher会返回文件名, 然后加载这个文件,
+如果这个文件有返回值, 那么这个返回值作为require的返回值,
+并且保存在package.loaded里面, 如果没有返回值, 那么package.loaded里面保存一个true
+
+
+
+{% endraw %}
+{# vim: ft=markdown
+#}
